@@ -1,0 +1,12 @@
+{% extends "layout.html" %} {% block title %} Member details {% endblock %} {% block main %}
+
+<div class="container">
+
+    {% if member != user %}
+    <h4><a href="/contact/{{ member }}">Send a message</a></h4>
+    {% endif %}
+    <h4><a href="/messages">View your messages</a></h4>
+
+</div>
+
+{% endblock %}

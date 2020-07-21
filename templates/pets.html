@@ -1,0 +1,30 @@
+{% extends "layout.html" %} 
+
+{% block title %} Adopt Me! {% endblock %} 
+
+{% block main %}
+
+<div class="container">
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">ID</th>
+                <th scope="col">Name</th>
+                <th scope="col">Owner</th>
+                <th scope="col">Animal</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for pet in pets %}
+            <tr>
+                <td>{{ pet[0] }}</td>
+                <td>{{ pet[2] }}</td>
+                <td>{{ pet[1] }}</td>
+                <td>{{ pet[3] }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{% endblock %}

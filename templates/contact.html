@@ -1,0 +1,30 @@
+{% extends "layout.html" %} {% block title %} Contact form {% endblock %} {% block main %}
+
+<div class="container">
+    <h4>Contacting {{ member }}</h4>
+
+    <form action="/contact/{{ member }}" method="POST">
+        <div class="form-group">
+            <label for="message">Enter your message: (<span id="characters">255</span> character<span id="plural">s</span>)</label>
+            <textarea name="message" class="form-control" id="message" rows="3" maxlength="255"></textarea>
+        </div>
+        <input name="receiver" type="text" value="{{ member_id }}" hidden>
+        <input name="sender" type="text" value="{{ user_id }}" hidden>
+        <button type="submit" class="btn btn-primary mb-2">Submit</button>
+    </form>
+
+</div>
+
+<script>
+    document.getElementById("message").onkeyup = function() {
+        let chars_left = 255 - document.getElementById("message").value.length;
+        document.getElementById("characters").innerHTML = chars_left;
+        if (chars_left != 1) {
+            document.getElementById("plural").innerHTML = "s";
+        } else {
+            document.getElementById("plural").innerHTML = "";
+        }
+    }
+</script>
+
+{% endblock %}
