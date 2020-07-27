@@ -5,7 +5,9 @@
 {% block main %}
 
 <div class="container">
-    {{threads}}
+    {% for thread in threads %}
+    <p><a href="/messages/{{thread[0]}}" >View</a> {{ thread }}</p>
+    {% endfor %}
 </div>
 
 {% endblock %}

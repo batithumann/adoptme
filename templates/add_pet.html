@@ -10,18 +10,144 @@
             <input name="name" type="text" class="form-control" id="nameInput">
         </div>
         <div class="form-group">
-            <label for="animalSelect">Breed</label>
-            <select name="animal" class="form-control" id="animalSelect">
-                <option value="2">Dog</option>
-                <option value="1">Cat</option>
+            <label for="ageSelect">Age</label>
+            <select name="age" class="form-control" id="ageSelect">
+                <option>Unknown</option>
+                <option>Baby</option>
+                <option>Young</option>
+                <option>Adult</option>
+                <option>Senior</option>
             </select>
         </div>
         <div class="form-group">
-            <label for="photo_file">Example file input</label>
-            <input name="file" type="file" accept="image/*" id="photo_file" class="form-control-file">
+            <label for="genderSelect">Gender</label>
+            <select name="gender" class="form-control" id="genderelect">
+                <option>Unknown</option>
+                <option>Male</option>
+                <option>Female</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="animalSelect">Animal</label>
+            <select name="animal" class="form-control" id="animalSelect">
+                <option disabled selected></option>
+                <option>Cat</option>
+                <option>Dog</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="breedSelect">Breed</label>
+            <select name="breed" class="form-control" id="breedSelect">
+                <option>Mixed / Don't know</option>
+                {% for cat in cats %}
+                    <option class="catBreed">{{ cat }}</option>
+                {% endfor %}
+                {% for dog in dogs %}
+                    <option class="dogBreed">{{ dog }}</option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="form-group">
+            <label for="description">Add a short description: (<span id="characters">255</span> character<span id="plural">s</span>)</label>
+            <textarea name="description" class="form-control" id="description" rows="3" maxlength="255"></textarea>
+        </div>
+        <div class="form-group" id="photo1div">
+            <label for="photo_file1">Add a photo:</label>
+            <input name="photo1" type="file" accept="image/*" id="photo_file1" class="form-control-file">
+            <input type="button" id="removePhoto1" value="Remove" hidden>
+        </div>
+        <div class="form-group" id="photo2div" hidden>
+            <label for="photo_file2">Add a photo:</label>
+            <input name="photo2" type="file" accept="image/*" id="photo_file2" class="form-control-file">
+            <input type="button" id="removePhoto2" value="Remove" hidden>
+        </div>
+        <div class="form-group" id="photo3div" hidden>
+            <label for="photo_file3">Add a photo:</label>
+            <input name="photo3" type="file" accept="image/*" id="photo_file3" class="form-control-file">
+            <input type="button" id="removePhoto3" value="Remove" hidden>
+        </div>
+        <div class="form-group" id="photo4div" hidden>
+            <label for="photo_file4">Add a photo:</label>
+            <input name="photo4" type="file" accept="image/*" id="photo_file4" class="form-control-file">
+            <input type="button" id="removePhoto4" value="Remove" hidden>
         </div>
         <input name="owner" type="text" value="{{ user_id }}" hidden>
         <input type="submit" value="Submit">
     </form>
 </div>
+
+
+<script>
+
+[].slice.call(document.getElementsByClassName("catBreed")).forEach(el => el.style.display="none");
+[].slice.call(document.getElementsByClassName("dogBreed")).forEach(el => el.style.display="none");
+
+document.getElementById("animalSelect").onchange = function() {
+    if (document.getElementById("animalSelect").value == "Cat") {
+        [].slice.call(document.getElementsByClassName("catBreed")).forEach(el => el.style.display="initial");
+        [].slice.call(document.getElementsByClassName("dogBreed")).forEach(el => el.style.display="none");
+        document.getElementById("breedSelect").value = "Mixed / Don't know";
+    }
+    if (document.getElementById("animalSelect").value == "Dog") {
+        [].slice.call(document.getElementsByClassName("dogBreed")).forEach(el => el.style.display="initial");
+        [].slice.call(document.getElementsByClassName("catBreed")).forEach(el => el.style.display="none");
+        document.getElementById("breedSelect").value = "Mixed / Don't know";
+    }
+}
+
+
+
+document.getElementById("photo_file1").onchange = function() {
+    if (document.getElementById("photo_file1").value != null) {
+        document.getElementById("removePhoto1").hidden = false;
+        document.getElementById("photo2div").hidden = false;
+    }
+}
+document.getElementById("removePhoto1").onclick = function() {
+    document.getElementById("photo_file1").value = null;
+    document.getElementById("removePhoto1").hidden = true;
+}
+
+document.getElementById("photo_file2").onchange = function() {
+    if (document.getElementById("photo_file2").value != null) {
+        document.getElementById("removePhoto2").hidden = false;
+        document.getElementById("photo3div").hidden = false;
+    }
+}
+document.getElementById("removePhoto2").onclick = function() {
+    document.getElementById("photo_file2").value = null;
+    document.getElementById("removePhoto2").hidden = true;
+}
+
+document.getElementById("photo_file3").onchange = function() {
+    if (document.getElementById("photo_file3").value != null) {
+        document.getElementById("removePhoto3").hidden = false;
+        document.getElementById("photo4div").hidden = false;
+    }
+}
+document.getElementById("removePhoto3").onclick = function() {
+    document.getElementById("photo_file3").value = null;
+    document.getElementById("removePhoto3").hidden = true;
+}
+
+document.getElementById("photo_file4").onchange = function() {
+    if (document.getElementById("photo_file4").value != null) {
+        document.getElementById("removePhoto4").hidden = false;
+    }
+}
+document.getElementById("removePhoto4").onclick = function() {
+    document.getElementById("photo_file4").value = null;
+    document.getElementById("removePhoto4").hidden = true;
+}
+
+document.getElementById("description").onkeyup = function() {
+    let chars_left = 255 - document.getElementById("description").value.length;
+    document.getElementById("characters").innerHTML = chars_left;
+    if (chars_left != 1) {
+        document.getElementById("plural").innerHTML = "s";
+    } else {
+        document.getElementById("plural").innerHTML = "";
+    }
+}
+</script>
 {% endblock %}

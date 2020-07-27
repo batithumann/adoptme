@@ -1,10 +1,12 @@
 import os
 
+import numpy as np
 import sqlite3
 import urllib
 import requests
 import json
 import glob
+import http.client
 from datetime import datetime
 from flask import Flask, flash, jsonify, redirect, render_template, request, session, url_for
 from flask_session import Session
@@ -217,7 +219,12 @@ def message_threads():
     db = sqlite3.connect('app.db')
     c = db.cursor()
     threads = c.execute('''
-        SELECT * FROM threads WHERE user1 = ? OR user2 = ?
+        SELECT t.*, u.username as counterpart_username FROM (
+        SELECT id, user2 as counterpart, latest from threads where user1 = ?
+        union all
+        SELECT id, user1 as counterpart, latest from threads where user2 = ?
+        ) t
+        LEFT JOIN users u on u.id = t.counterpart
     ''', (user_id, user_id)).fetchall()
 
     return render_template("threads.html", user=user, threads=threads)
@@ -242,7 +249,9 @@ def messages(thread_id):
 
     # Query database for messages
     messages = c.execute('''
-        SELECT * FROM messages WHERE thread_id = ?
+        SELECT m.*, u.username AS from_user FROM messages m 
+        LEFT JOIN users u ON u.id = m.sender
+        WHERE thread_id = ?
     ''', (thread_id)).fetchall()
 
     return render_template("messages.html", user=user, messages=messages)
@@ -253,11 +262,25 @@ def messages(thread_id):
 def pets():
     user = session.get("user")
 
-    db = sqlite3.connect('app.db')
+    db = sqlite3.connect('app.db', detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
     c = db.cursor()
-    pets = c.execute('SELECT * FROM pets').fetchall()
+    pets = c.execute('SELECT id, owner, name, age, gender, animal, breed, entry_date as "[timestamp]", description FROM pets').fetchall()
 
-    return render_template("pets.html", user=user, pets=pets)
+    current = datetime.now()
+
+    return render_template("pets.html", user=user, pets=pets, current=current)
+
+
+@app.route("/pets/<pet_id>")
+def pets_detail(pet_id):
+    user = session.get("user")
+
+    db = sqlite3.connect('app.db', detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
+    c = db.cursor()
+    details = c.execute('SELECT id, owner, name, age, gender, animal, breed, entry_date as "[timestamp]", description FROM pets').fetchall()
+    photos = c.execute('SELECT * FROM photos WHERE pet_id = ?',(pet_id, )).fetchall()
+
+    return render_template("pet_detail.html", user=user, details=details, photos=photos)
 
 
 
@@ -268,19 +291,89 @@ def add_pet():
     user_id = session.get("user_id")
 
     if request.method == "GET":
-        return render_template("add_pet.html", user=user, user_id = user_id)
+        cats = get_cat_breeds()
+        dogs = get_dog_breeds()
+        return render_template("add_pet.html", user=user, user_id = user_id, dogs=dogs, cats=cats)
     else: 
         owner = request.form.get("owner")
         name = request.form.get("name")
-        animal_class = request.form.get("animal")
+        age = request.form.get("age")
+        gender = request.form.get("gender")
+        animal = request.form.get("animal")
+        breed = request.form.get("breed")
+        description = request.form.get("description")
+
+        entry_date = datetime.now()
+
         db = sqlite3.connect("app.db")
         c = db.cursor()
-        data = (owner, name, animal_class)
-        sql = "INSERT INTO pets (owner, name, animal_class) VALUES (?, ?, ?)"
+        data = (owner, name, age, gender, animal, breed, entry_date, description)
+        sql = "INSERT INTO pets (owner, name, age, gender, animal, breed, entry_date, description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
         c.execute(sql, data)
         db.commit()
+
+        pet_id = str(c.execute("SELECT id FROM pets WHERE entry_date = ?", (entry_date,)).fetchall()[0][0])
+
+        path = "static/uploads/" + pet_id
+        os.mkdir(path)
+
+        images = []
+        for file in glob.glob(path + "/*"):
+            images.append(file)
+
+        for photo in ['photo1', 'photo2', 'photo3', 'photo4']:
+            if photo in request.files:
+                file = request.files[photo]
+                if file.filename != '':
+                    if file and allowed_file(file.filename):
+                        filename = secure_filename(file.filename)
+                        i = 1
+                        while path + "/" + filename in images:
+                            filename = secure_filename(file.filename).rsplit('.', 1)[0] + str(i) + secure_filename(file.filename).rsplit('.', 1)[1]
+                            i += 1
+                        file.save(os.path.join(basedir, path + "/", filename))
+                        c.execute("INSERT INTO photos (pet_id, filename) VALUES (?, ?)", (pet_id, filename))
+        
         db.close()
+
+        #add_photo(pet_id, )
+
         return redirect("/pets")
+
+
+
+@app.route("/catapi", methods=["GET", "POST"])
+def catapi():
+    
+    conn = http.client.HTTPSConnection("api.thecatapi.com")
+
+    headers = { 'x-api-key': "7737b5f1-f53b-4225-b781-d0b80604ebab" }
+
+    conn.request("GET", "/v1/breeds?attach_breed=0", headers=headers)
+
+    res = conn.getresponse()
+    data = res.read()
+    j = json.loads(data.decode("utf-8"))
+
+    return render_template("cats.html", cats=j)
+
+
+
+@app.route("/dogapi", methods=["GET", "POST"])
+def dogapi():
+    
+
+    conn = http.client.HTTPSConnection("api.thedogapi.com")
+
+    headers = { 'x-api-key': "3a2b00e5-a4b0-4618-8181-43a3192048fd" }
+
+    conn.request("GET", "/v1/breeds?attach_breed=0", headers=headers)
+
+    res = conn.getresponse()
+    data = res.read()
+    j = json.loads(data.decode("utf-8"))
+
+    return render_template("cats.html", cats=j)
 
 
 
@@ -328,6 +421,42 @@ def errorhandler(e):
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+def get_cat_breeds():
+    cats = []
+    f = open("static/txt/cats.txt", "r")
+    for line in f:
+        cats.append(line)
+    return cats
+
+def get_dog_breeds():
+    dogs = []
+    f = open("static/txt/dogs.txt", "r")
+    for line in f:
+        dogs.append(line)
+    return dogs
+
+
+def add_photo(pet_id, file):
+    images = []
+    for file in glob.glob("static/uploads/" + pet_id + "/*"):
+        images.append(file)
+    file = request.files['file']
+    # if user does not select file, browser also
+    # submit an empty part without filename
+    if file.filename == '':
+        print("No selected file")
+        return redirect(request.url)
+    # file = request.form.get("file")
+    if file and allowed_file(file.filename):
+        filename = secure_filename(file.filename)
+        print(filename)
+        i = 1
+        while "static/uploads/" + filename in images:
+            filename = secure_filename(file.filename).rsplit('.', 1)[0] + str(i) + secure_filename(file.filename).rsplit('.', 1)[1]
+            i += 1
+        file.save(os.path.join(basedir, "static/uploads", filename))
 
 
 # Listen for errors

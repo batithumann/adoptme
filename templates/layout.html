@@ -25,6 +25,7 @@
         <p><a href="/">Home</a></p>
         {% if user %}
         <p>Hello, <a href="/members/{{ user }}">{{ user }}</a>. <a href="/logout">Log out</a></p>
+        <p><a href="/messages">View your messages</a></p>
         {% else %}
         <p>Hello, visitor. Please <a href="/register">register</a> or <a href="/login">log in</a></p>
         {% endif %}

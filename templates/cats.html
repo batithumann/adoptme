@@ -5,9 +5,11 @@
 {% block main %}
 
 <div class="container">
-    {% for message in messages %}
-    <p>{{ message}}</p>
+    {% for cat in cats %}
+    {{cat}}<br>
     {% endfor %}
 </div>
+
+
 
 {% endblock %}
