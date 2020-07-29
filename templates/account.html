@@ -1,0 +1,20 @@
+{% extends "layout.html" %} 
+
+{% block title %} Adopt Me! {% endblock %} 
+
+{% block main %}
+
+<div class="container">
+    <ul>
+        <li><a href="/account/edit">Edit your account details</a></li>
+        <li><a href="/add_pet">Put a pet up for adoption</a></li>
+    </ul>
+    <h4>Your pets</h4>
+    <ol>
+        {% for pet in rows %}
+        <li><a href="/pets/{{ pet[0] }}">{{ pet[2] }}</a> - (<a href="">Edit or Remove</a>)</li>
+        {% endfor %}
+    </ol>
+</div>
+
+{% endblock %}

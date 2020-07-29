@@ -1,6 +1,5 @@
 import os
 
-import numpy as np
 import sqlite3
 import urllib
 import requests
@@ -141,8 +140,22 @@ def logout():
     # Forget any user_id
     session.clear()
 
-    # Redirect user to login form
     return redirect('/')
+
+
+
+@app.route('/account')
+@login_required
+def account():
+    '''Manage user's account'''
+    user = session.get("user")
+    user_id = session.get("user_id")
+
+    db = sqlite3.connect('app.db')
+    c = db.cursor()
+    rows = c.execute('SELECT * FROM pets WHERE owner = ?', (user_id,)).fetchall()
+    
+    return render_template("account.html", user=user, rows=rows)
 
 
 
@@ -259,28 +272,62 @@ def messages(thread_id):
 
 
 @app.route("/pets")
-def pets():
+def pets0():
     user = session.get("user")
 
     db = sqlite3.connect('app.db', detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
     c = db.cursor()
-    pets = c.execute('SELECT id, owner, name, age, gender, animal, breed, entry_date as "[timestamp]", description FROM pets').fetchall()
+    pets = c.execute('''SELECT p.id, p.owner, p.name, p.age, p.gender, p.animal, p.breed, p.entry_date as "[timestamp]", p.description, ph.filename FROM pets p
+                        LEFT JOIN (SELECT pet_id, filename FROM photos GROUP BY pet_id) ph
+                        ON ph.pet_id = p.id''').fetchall()
+    breeds = c.execute('SELECT DISTINCT breed FROM pets').fetchall()
+    ages = c.execute('SELECT DISTINCT age FROM pets').fetchall()
+    genders = c.execute('SELECT DISTINCT gender FROM pets').fetchall()
 
     current = datetime.now()
 
-    return render_template("pets.html", user=user, pets=pets, current=current)
+    return render_template("pets.html", user=user, pets=pets, breeds=breeds, ages=ages, genders=genders, current=current)
 
 
-@app.route("/pets/<pet_id>")
-def pets_detail(pet_id):
+@app.route("/pets/<animal>")
+def pets(animal):
     user = session.get("user")
+
+    if animal not in ['cats', 'dogs']:
+        return redirect("/pets")
+
+    animal = animal.capitalize()[:-1]
+    print(animal)
 
     db = sqlite3.connect('app.db', detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
     c = db.cursor()
-    details = c.execute('SELECT id, owner, name, age, gender, animal, breed, entry_date as "[timestamp]", description FROM pets').fetchall()
+    pets = c.execute('''SELECT p.id, p.owner, p.name, p.age, p.gender, p.animal, p.breed, p.entry_date as "[timestamp]", p.description, ph.filename FROM pets p
+                        LEFT JOIN (SELECT pet_id, filename FROM photos GROUP BY pet_id) ph
+                        ON ph.pet_id = p.id WHERE p.animal = ?''', (animal, )).fetchall()
+    breeds = c.execute('SELECT DISTINCT breed FROM pets WHERE animal = ?', (animal, )).fetchall()
+    ages = c.execute('SELECT DISTINCT age FROM pets WHERE animal = ?', (animal, )).fetchall()
+    genders = c.execute('SELECT DISTINCT gender FROM pets WHERE animal = ?', (animal, )).fetchall()
+
+    current = datetime.now()
+
+    return render_template("pets.html", user=user, pets=pets, breeds=breeds, ages=ages, genders=genders, current=current)
+
+
+
+@app.route("/pets/<animal>/<pet_id>")
+def pets_detail(animal, pet_id):
+    user = session.get("user")
+    user_id = session.get("user_id")
+
+    db = sqlite3.connect('app.db', detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
+    c = db.cursor()
+    details = c.execute('SELECT id, owner, name, age, gender, animal, breed, entry_date as "[timestamp]", description FROM pets WHERE id = ?', (pet_id, )).fetchall()[0]
+    if len(details) < 1:
+        return redirect("/pets")
+    owner = c.execute('SELECT * FROM users WHERE id = (SELECT owner FROM pets WHERE id = ?)', (pet_id, )).fetchall()[0]
     photos = c.execute('SELECT * FROM photos WHERE pet_id = ?',(pet_id, )).fetchall()
 
-    return render_template("pet_detail.html", user=user, details=details, photos=photos)
+    return render_template("pet_detail.html", user=user, user_id=user_id, details=details, owner=owner, photos=photos)
 
 
 
@@ -333,6 +380,7 @@ def add_pet():
                             i += 1
                         file.save(os.path.join(basedir, path + "/", filename))
                         c.execute("INSERT INTO photos (pet_id, filename) VALUES (?, ?)", (pet_id, filename))
+                        db.commit()
         
         db.close()
 

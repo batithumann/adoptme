@@ -5,32 +5,74 @@
 {% block main %}
 
 <div class="container">
-    <table class="table">
-        <thead>
-            <tr>
-                <th scope="col">Name</th>
-                <th scope="col">Age</th>
-                <th scope="col">Gender</th>
-                <th scope="col">Animal</th>
-                <th scope="col">Breed</th>
-                <th scope="col">Entry Date</th>
-                <th scope="col">Description</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for pet in pets %}
-            <tr>
-                <td><a href="/pets/{{ pet[0] }}">{{ pet[2] }}</a></td>
-                <td>{{ pet[3] }}</td>
-                <td>{{ pet[4] }}</td>
-                <td>{{ pet[5] }}</td>
-                <td>{{ pet[6] }}</td>
-                <td>{{ pet[7].strftime('%B %d %Y') }}</td>
-                <td>{{ pet[8] }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="row">
+
+        <div class="col-3">
+            <h5>Filters</h5>
+            <form>
+                <strong>Breed</strong>
+                {% for breed in breeds %}
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="{{ breed[0] }}">
+                    <label class="form-check-label" for="{{ breed[0] }}">{{ breed[0] }}</label>
+                </div>
+                {% endfor %}
+
+                <strong>Age</strong>
+                {% for age in ages %}
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="{{ age[0] }}">
+                    <label class="form-check-label" for="{{ age[0] }}">{{ age[0] }}</label>
+                </div>
+                {% endfor %}
+
+                <strong>Gender</strong>
+                {% for gender in genders %}
+                <div class="form-check">
+                    <input type="checkbox" class="form-check-input" id="{{ gender[0] }}">
+                    <label class="form-check-label" for="{{ gender[0] }}">{{ gender[0] }}</label>
+                </div>
+                {% endfor %}
+            </form>
+        </div>
+
+        <div class="col-9">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col">Name</th>
+                        <th scope="col">Age</th>
+                        <th scope="col">Gender</th>
+                        <th scope="col">Animal</th>
+                        <th scope="col">Breed</th>
+                        <th scope="col">Entry Date</th>
+                        <th scope="col">Description</th>
+                        <th scope="col">Photo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for pet in pets %}
+                    <tr>
+                        <td><a href="/pets/{{ pet[5]|lower }}s/{{ pet[0] }}">{{ pet[2] }}</a></td>
+                        <td>{{ pet[3] }}</td>
+                        <td>{{ pet[4] }}</td>
+                        <td>{{ pet[5] }}</td>
+                        <td>{{ pet[6] }}</td>
+                        <td>{{ pet[7].strftime('%B %d %Y') }}</td>
+                        <td>{{ pet[8] }}</td>
+                        <td>
+                            {% if pet[9] %}
+                            <img src="/static/uploads/{{ pet[0] }}/{{ pet[9] }}" class="img-fluid">
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+    
 </div>
 
 {% endblock %}

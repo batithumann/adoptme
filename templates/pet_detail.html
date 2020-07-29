@@ -5,8 +5,77 @@
 {% block main %}
 
 <div class="container">
-    <p>{{ details }}</p>
-    <p>{{ photos }}</p>
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col">Name</th>
+                <th scope="col">Age</th>
+                <th scope="col">Gender</th>
+                <th scope="col">Animal</th>
+                <th scope="col">Breed</th>
+                <th scope="col">Entry Date</th>
+                <th scope="col">Description</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><a href="/pets/{{ details[0] }}">{{ details[2] }}</a></td>
+                <td>{{ details[3] }}</td>
+                <td>{{ details[4] }}</td>
+                <td>{{ details[5] }}</td>
+                <td>{{ details[6] }}</td>
+                <td>{{ details[7].strftime('%B %d %Y') }}</td>
+                <td>{{ details[8] }}</td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="row">
+        {% for photo in photos %}
+        <div class="col-3">
+            <img src="/static/uploads/{{ photo[1] }}/{{ photo[2] }}" class="img-thumbnail">
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="row">
+        <div class="col">
+            <h2># TODO</h2>
+            <p>Agregar columna SUBJECT a los mensajes. Que el nombre de la mascota sea el subject</p>
+        {% if user and details[1] != user_id %}
+        <h4>Ask about {{ details[2] }}</h4>
+        
+            <form action="/contact/{{ owner[1] }}" method="POST">
+                <div class="form-group">
+                    <label for="message">Enter your message: (<span id="characters">255</span> character<span id="plural">s</span>)</label>
+                    <textarea name="message" class="form-control" id="message" rows="3" maxlength="255"></textarea>
+                </div>
+                <input name="receiver" type="text" value="{{ owner[0] }}" hidden>
+                <input name="sender" type="text" value="{{ user_id }}" hidden>
+                <button type="submit" class="btn btn-primary mb-2">Submit</button>
+            </form>
+        
+        {% elif not user %}
+        <a href="/login">Log in to ask about {{ details[2] }}</a></p>
+        {% endif %}
+        </div>
+    </div>
+
+
+    
 </div>
+
+
+
+<script>
+    document.getElementById("message").onkeyup = function() {
+        let chars_left = 255 - document.getElementById("message").value.length;
+        document.getElementById("characters").innerHTML = chars_left;
+        if (chars_left != 1) {
+            document.getElementById("plural").innerHTML = "s";
+        } else {
+            document.getElementById("plural").innerHTML = "";
+        }
+    }
+</script>
 
 {% endblock %}

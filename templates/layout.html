@@ -26,16 +26,14 @@
         {% if user %}
         <p>Hello, <a href="/members/{{ user }}">{{ user }}</a>. <a href="/logout">Log out</a></p>
         <p><a href="/messages">View your messages</a></p>
+        <p><a href="/account">Manage your account</a></p>
+        <p><a href="/add_pet">Add pet</a></p>
         {% else %}
         <p>Hello, visitor. Please <a href="/register">register</a> or <a href="/login">log in</a></p>
         {% endif %}
-        <form action="/search" method="get">
-            <div>
-                <input type="text" placeholder="Search" name="q" id="search_query">
-                <button type="submit">Search</button>
-            </div>
-        </form>
-        <a href="/add_pet">Add pet</a>
+        <p><a href="/pets">View all pets</a></p>
+        <p><a href="/pets/dogs">View all dogs</a></p>
+        <p><a href="/pets/cats">View all cats</a></p>
     </div>
     
     {% block main %}{% endblock %}

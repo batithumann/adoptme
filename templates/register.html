@@ -1,6 +1,6 @@
 {% extends "layout.html" %}
 
-{% block title %} User log in {% endblock %} 
+{% block title %} Register new user {% endblock %} 
 
 {% block links %}
     <link rel="stylesheet" type="text/css" href="/static/css/login.css"> 
@@ -16,6 +16,15 @@
         <input name="username" type="text" id="username" class="form-control" placeholder="Username" required autofocus>
         <label for="email" class="sr-only">Email address</label>
         <input name="email" type="email" id="email" class="form-control" placeholder="Email address" required>
+        <label for="location" class="sr-only">Location</label>
+        <input name="location" type="text" id="location" class="form-control" placeholder="Location" required>
+        <div class="form-group">
+            <label for="shelter">Are you a shelter</label>
+            <select name="shelter" class="form-control" id="shelter">
+                <option>No</option>
+                <option>Yes</option>
+            </select>
+        </div>
         <label for="password" class="sr-only">Password</label>
         <input name="password" type="password" id="password" class="form-control" placeholder="Password" required>
         <label for="password_confirm" class="sr-only">Confirm password</label>

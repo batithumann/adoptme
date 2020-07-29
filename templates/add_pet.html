@@ -48,8 +48,8 @@
             </select>
         </div>
         <div class="form-group">
-            <label for="description">Add a short description: (<span id="characters">255</span> character<span id="plural">s</span>)</label>
-            <textarea name="description" class="form-control" id="description" rows="3" maxlength="255"></textarea>
+            <label for="description">Add a short description: (<span id="characters">512</span> character<span id="plural">s</span>)</label>
+            <textarea name="description" class="form-control" id="description" rows="3" maxlength="512"></textarea>
         </div>
         <div class="form-group" id="photo1div">
             <label for="photo_file1">Add a photo:</label>
@@ -141,7 +141,7 @@ document.getElementById("removePhoto4").onclick = function() {
 }
 
 document.getElementById("description").onkeyup = function() {
-    let chars_left = 255 - document.getElementById("description").value.length;
+    let chars_left = 512 - document.getElementById("description").value.length;
     document.getElementById("characters").innerHTML = chars_left;
     if (chars_left != 1) {
         document.getElementById("plural").innerHTML = "s";
