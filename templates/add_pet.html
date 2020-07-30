@@ -33,12 +33,13 @@
                 <option disabled selected></option>
                 <option>Cat</option>
                 <option>Dog</option>
+                <option>Other</option>
             </select>
         </div>
         <div class="form-group">
             <label for="breedSelect">Breed</label>
             <select name="breed" class="form-control" id="breedSelect">
-                <option>Mixed / Don't know</option>
+                <option>Other</option>
                 {% for cat in cats %}
                     <option class="catBreed">{{ cat }}</option>
                 {% endfor %}
@@ -83,16 +84,15 @@
 [].slice.call(document.getElementsByClassName("dogBreed")).forEach(el => el.style.display="none");
 
 document.getElementById("animalSelect").onchange = function() {
+    [].slice.call(document.getElementsByClassName("dogBreed")).forEach(el => el.style.display="none");
+    [].slice.call(document.getElementsByClassName("catBreed")).forEach(el => el.style.display="none");
     if (document.getElementById("animalSelect").value == "Cat") {
         [].slice.call(document.getElementsByClassName("catBreed")).forEach(el => el.style.display="initial");
-        [].slice.call(document.getElementsByClassName("dogBreed")).forEach(el => el.style.display="none");
-        document.getElementById("breedSelect").value = "Mixed / Don't know";
     }
     if (document.getElementById("animalSelect").value == "Dog") {
         [].slice.call(document.getElementsByClassName("dogBreed")).forEach(el => el.style.display="initial");
-        [].slice.call(document.getElementsByClassName("catBreed")).forEach(el => el.style.display="none");
-        document.getElementById("breedSelect").value = "Mixed / Don't know";
     }
+        document.getElementById("breedSelect").value = "Mixed / Don't know";
 }
 
 

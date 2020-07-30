@@ -197,20 +197,21 @@ def contact(username):
         sender = request.form.get("sender")
         receiver = request.form.get("receiver")
         message = request.form.get("message")
+        subject = request.form.get("subject")
         timestamp = datetime.now()
 
         # Query database for thread
         db = sqlite3.connect('app.db')
         c = db.cursor()
-        data = (sender, receiver, sender, receiver)
-        sql = "SELECT id FROM threads WHERE (user1 = ? AND user2 = ?) OR (user2 = ? AND user1 = ?)"
+        data = (sender, receiver, subject, sender, receiver, subject)
+        sql = "SELECT id FROM threads WHERE (user1 = ? AND user2 = ? AND subject = ?) OR (user2 = ? AND user1 = ? AND subject = ?)"
         rows = c.execute(sql, data).fetchall()
         if len(rows) > 0:
             thread_id = rows[0][0]
             c.execute("UPDATE threads SET latest = ? WHERE id = ?", (timestamp, thread_id))
         else:
-            c.execute("INSERT INTO threads (user1, user2, latest) VALUES (?, ?, ?)", (sender, receiver, timestamp))
-            thread_id = c.execute("SELECT id FROM threads WHERE (user1 = ? AND user2 = ?)", (sender, receiver)).fetchall()[0][0]
+            c.execute("INSERT INTO threads (user1, user2, latest, subject) VALUES (?, ?, ?, ?)", (sender, receiver, timestamp, subject))
+            thread_id = c.execute("SELECT id FROM threads WHERE (user1 = ? AND user2 = ? AND subject = ?)", (sender, receiver, subject)).fetchall()[0][0]
         
         message_data = (sender, thread_id, message, timestamp)
         message_sql = "INSERT INTO messages (sender, thread_id, message, timestamp) VALUES (?, ?, ?, ?)"
@@ -233,11 +234,12 @@ def message_threads():
     c = db.cursor()
     threads = c.execute('''
         SELECT t.*, u.username as counterpart_username FROM (
-        SELECT id, user2 as counterpart, latest from threads where user1 = ?
+        SELECT id, user2 as counterpart, latest, subject from threads where user1 = ?
         union all
-        SELECT id, user1 as counterpart, latest from threads where user2 = ?
+        SELECT id, user1 as counterpart, latest, subject from threads where user2 = ?
         ) t
         LEFT JOIN users u on u.id = t.counterpart
+        ORDER BY latest DESC
     ''', (user_id, user_id)).fetchall()
 
     return render_template("threads.html", user=user, threads=threads)
@@ -262,12 +264,13 @@ def messages(thread_id):
 
     # Query database for messages
     messages = c.execute('''
-        SELECT m.*, u.username AS from_user FROM messages m 
+        SELECT m.*, u.username AS from_user, t.user1, t.user2, t.subject FROM messages m 
         LEFT JOIN users u ON u.id = m.sender
+		LEFT JOIN threads t on m.thread_id = t.id
         WHERE thread_id = ?
     ''', (thread_id)).fetchall()
 
-    return render_template("messages.html", user=user, messages=messages)
+    return render_template("messages.html", user=user, user_id=user_id, messages=messages)
 
 
 

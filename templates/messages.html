@@ -6,8 +6,33 @@
 
 <div class="container">
     {% for message in messages %}
-    <p>{{ message}}</p>
+    {% if message[1] == user_id %}
+    <div class="media right">
+    {% else %}
+    <div class="media">
+    {% endif %}
+        <div class="media-body">
+            {% if message[1] == user_id %}
+            <h5 class="mt-0">You</h5>
+            {% else %}
+            <h5 class="mt-0"><a href="/members/{{ message[6] }}">{{ message[6] }}</a></h5>
+            {% endif %}
+            <p>{{ message[3] }}</p>
+            <small>{{ message[4][:19] }}</small>
+        </div>
+    </div>
     {% endfor %}
+        
+    <form action="/contact/" method="POST">
+        <div class="form-group">
+            <label for="message">Enter your reply: (<span id="characters">255</span> character<span id="plural">s</span>)</label>
+            <textarea name="message" class="form-control" id="message" rows="3" maxlength="255"></textarea>
+        </div>
+        <input name="receiver" type="text" value="{% if user_id == messages[0][7] %}{{ messages[0][8] }}{% else %}{{ messages[0][7] }}{% endif %}" hidden>
+        <input name="sender" type="text" value="{{ user_id }}" hidden>
+        <input name="subject" type="text" value="{{ messages[0][9] }}" hidden>
+        <button type="submit" class="btn btn-primary mb-2">Submit</button>
+    </form>
 </div>
 
 {% endblock %}

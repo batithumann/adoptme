@@ -4,9 +4,10 @@
     <h4>Contacting {{ member }}</h4>
 
     <form action="/contact/{{ member }}" method="POST">
+        Subject: <input name="subject" type="text" required>
         <div class="form-group">
             <label for="message">Enter your message: (<span id="characters">255</span> character<span id="plural">s</span>)</label>
-            <textarea name="message" class="form-control" id="message" rows="3" maxlength="255"></textarea>
+            <textarea name="message" class="form-control" id="message" rows="3" maxlength="255" required></textarea>
         </div>
         <input name="receiver" type="text" value="{{ member_id }}" hidden>
         <input name="sender" type="text" value="{{ user_id }}" hidden>

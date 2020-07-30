@@ -39,8 +39,6 @@
     
     <div class="row">
         <div class="col">
-            <h2># TODO</h2>
-            <p>Agregar columna SUBJECT a los mensajes. Que el nombre de la mascota sea el subject</p>
         {% if user and details[1] != user_id %}
         <h4>Ask about {{ details[2] }}</h4>
         
@@ -51,6 +49,7 @@
                 </div>
                 <input name="receiver" type="text" value="{{ owner[0] }}" hidden>
                 <input name="sender" type="text" value="{{ user_id }}" hidden>
+                <input name="subject" type="text" value="{{ details[2] }}" hidden>
                 <button type="submit" class="btn btn-primary mb-2">Submit</button>
             </form>
         
