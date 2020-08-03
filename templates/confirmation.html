@@ -1,0 +1,17 @@
+{% extends "layout.html" %} 
+
+{% block title %} User log in {% endblock %}
+
+{% block links %}
+    <link rel="stylesheet" type="text/css" href="/static/css/login.css">
+{% endblock %}
+
+{% block main %}
+<div class="container text-center login">
+    <h4>Are you sure you want to remove {{ pet[2] }} from adoption?</h4>
+    <form class="form-signin" action="/remove/{{ pet[0] }}" method="POST">
+        <button class="btn btn-lg btn-primary btn-block" type="submit">I'm sure</button>
+        <a href="/account" class="btn btn-lg btn-secondary btn-block">No, go back</a>
+    </form>
+</div>
+{% endblock %}
