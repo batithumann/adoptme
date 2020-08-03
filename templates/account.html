@@ -9,10 +9,12 @@
         <li><a href="/account/edit">Edit your account details</a></li>
         <li><a href="/add_pet">Put a pet up for adoption</a></li>
     </ul>
+    {% if rows|length > 0 %}
     <h4>Your pets</h4>
+    {% endif %}
     <ol>
         {% for pet in rows %}
-        <li><a href="/pets/{{ pet[0] }}">{{ pet[2] }}</a> - (<a href="">Edit or Remove</a>)</li>
+        <li><a href="/pets/{{ pet[5]|lower }}s/{{ pet[0] }}">{{ pet[2] }}</a> - (<a href="/remove/{{ pet[0] }}">Edit or Remove</a>)</li>
         {% endfor %}
     </ol>
 </div>

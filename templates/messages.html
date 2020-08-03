@@ -23,7 +23,11 @@
     </div>
     {% endfor %}
         
-    <form action="/contact/" method="POST">
+    {% if messages[0][8] == user %}
+    <form action="/contact/{{ messages[0][10] }}" method="POST">
+    {% else %}
+    <form action="/contact/{{ messages[0][8] }}" method="POST">
+    {% endif %}
         <div class="form-group">
             <label for="message">Enter your reply: (<span id="characters">255</span> character<span id="plural">s</span>)</label>
             <textarea name="message" class="form-control" id="message" rows="3" maxlength="255"></textarea>

@@ -6,6 +6,7 @@ import requests
 import json
 import glob
 import http.client
+import shutil
 from datetime import datetime
 from flask import Flask, flash, jsonify, redirect, render_template, request, session, url_for
 from flask_session import Session
@@ -218,7 +219,7 @@ def contact(username):
         c.execute(message_sql, message_data)
         db.commit()
         db.close()
-        return redirect("/")
+        return redirect("/messages/" + str(thread_id))
 
 
 
@@ -267,6 +268,8 @@ def messages(thread_id):
         SELECT m.*, u.username AS from_user, t.user1, t.user2, t.subject FROM messages m 
         LEFT JOIN users u ON u.id = m.sender
 		LEFT JOIN threads t on m.thread_id = t.id
+        LEFT JOIN users u1 on t.user1 = u1.id
+		LEFT JOIN users u2 on t.user2 = u2.id
         WHERE thread_id = ?
     ''', (thread_id)).fetchall()
 
@@ -280,16 +283,68 @@ def pets0():
 
     db = sqlite3.connect('app.db', detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
     c = db.cursor()
-    pets = c.execute('''SELECT p.id, p.owner, p.name, p.age, p.gender, p.animal, p.breed, p.entry_date as "[timestamp]", p.description, ph.filename FROM pets p
-                        LEFT JOIN (SELECT pet_id, filename FROM photos GROUP BY pet_id) ph
-                        ON ph.pet_id = p.id''').fetchall()
+    query = '''
+    SELECT p.id, p.owner, p.name, p.age, p.gender, p.animal, p.breed, p.entry_date as "[timestamp]", p.description, ph.filename FROM pets p
+    LEFT JOIN (SELECT pet_id, filename FROM photos GROUP BY pet_id) ph
+    ON ph.pet_id = p.id
+    '''
+
+    breed_filters = []
+    age_filters = []
+    gender_filters = []
+
+    for key, value in request.args.items():
+        if key[:5] == 'breed' and value == 'on':
+            breed_filters.append(key[5:])
+        elif key[:3] == 'age' and value == 'on':
+            age_filters.append(key[3:])
+        elif key[:6] == 'gender' and value == 'on':
+            gender_filters.append(key[6:])
+
+    filters = breed_filters + age_filters + gender_filters
+            
+
+    if len(breed_filters) + len(age_filters) + len(gender_filters) > 0:
+        query += ' WHERE '
+    
+    if len(breed_filters) > 0:
+        query += 'p.breed IN ('
+        for i in range(len(breed_filters)):
+            query += '"' + breed_filters[i] + '"'
+            if i < len(breed_filters) - 1:
+                query += ', '
+        query += ')'
+        if len(age_filters) + len(gender_filters) > 0:
+            query += ' AND '
+
+    if len(age_filters) > 0:
+        query += 'p.age IN ('
+        for i in range(len(age_filters)):
+            query += '"' + age_filters[i] + '"'
+            if i < len(age_filters) - 1:
+                query += ', '
+        query += ')'
+        if len(gender_filters) > 0:
+            query += ' AND '
+
+    if len(gender_filters) > 0:
+        query += 'p.gender IN ('
+        for i in range(len(gender_filters)):
+            query += '"' + gender_filters[i] + '"'
+            if i < len(gender_filters) - 1:
+                query += ', '
+        query += ')'
+
+
+    query += ' ORDER BY entry_date DESC'
+    pets = c.execute(query).fetchall()
     breeds = c.execute('SELECT DISTINCT breed FROM pets').fetchall()
     ages = c.execute('SELECT DISTINCT age FROM pets').fetchall()
     genders = c.execute('SELECT DISTINCT gender FROM pets').fetchall()
 
     current = datetime.now()
 
-    return render_template("pets.html", user=user, pets=pets, breeds=breeds, ages=ages, genders=genders, current=current)
+    return render_template("pets.html", user=user, pets=pets, breeds=breeds, ages=ages, genders=genders, current=current, filters=filters)
 
 
 @app.route("/pets/<animal>")
@@ -300,20 +355,72 @@ def pets(animal):
         return redirect("/pets")
 
     animal = animal.capitalize()[:-1]
-    print(animal)
 
     db = sqlite3.connect('app.db', detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
     c = db.cursor()
-    pets = c.execute('''SELECT p.id, p.owner, p.name, p.age, p.gender, p.animal, p.breed, p.entry_date as "[timestamp]", p.description, ph.filename FROM pets p
-                        LEFT JOIN (SELECT pet_id, filename FROM photos GROUP BY pet_id) ph
-                        ON ph.pet_id = p.id WHERE p.animal = ?''', (animal, )).fetchall()
+    query = '''
+    SELECT p.id, p.owner, p.name, p.age, p.gender, p.animal, p.breed, p.entry_date as "[timestamp]", p.description, ph.filename FROM pets p
+    LEFT JOIN (SELECT pet_id, filename FROM photos GROUP BY pet_id) ph
+    ON ph.pet_id = p.id WHERE p.animal = 
+    '''
+    query += '"' + animal + '" '
+
+    breed_filters = []
+    age_filters = []
+    gender_filters = []
+
+    for key, value in request.args.items():
+        if key[:5] == 'breed' and value == 'on':
+            breed_filters.append(key[5:])
+        elif key[:3] == 'age' and value == 'on':
+            age_filters.append(key[3:])
+        elif key[:6] == 'gender' and value == 'on':
+            gender_filters.append(key[6:])
+            
+    filters = breed_filters + age_filters + gender_filters
+
+
+    if len(breed_filters) + len(age_filters) + len(gender_filters) > 0:
+        query += ' AND '
+    
+    if len(breed_filters) > 0:
+        query += 'p.breed IN ('
+        for i in range(len(breed_filters)):
+            query += '"' + breed_filters[i] + '"'
+            if i < len(breed_filters) - 1:
+                query += ', '
+        query += ')'
+        if len(age_filters) + len(gender_filters) > 0:
+            query += ' AND '
+
+    if len(age_filters) > 0:
+        query += 'p.age IN ('
+        for i in range(len(age_filters)):
+            query += '"' + age_filters[i] + '"'
+            if i < len(age_filters) - 1:
+                query += ', '
+        query += ')'
+        if len(gender_filters) > 0:
+            query += ' AND '
+
+    if len(gender_filters) > 0:
+        query += 'p.gender IN ('
+        for i in range(len(gender_filters)):
+            query += '"' + gender_filters[i] + '"'
+            if i < len(gender_filters) - 1:
+                query += ', '
+        query += ')'
+    
+
+    query += ' ORDER BY entry_date DESC'
+    pets = c.execute(query).fetchall()
     breeds = c.execute('SELECT DISTINCT breed FROM pets WHERE animal = ?', (animal, )).fetchall()
     ages = c.execute('SELECT DISTINCT age FROM pets WHERE animal = ?', (animal, )).fetchall()
     genders = c.execute('SELECT DISTINCT gender FROM pets WHERE animal = ?', (animal, )).fetchall()
 
     current = datetime.now()
 
-    return render_template("pets.html", user=user, pets=pets, breeds=breeds, ages=ages, genders=genders, current=current)
+    return render_template("pets.html", user=user, pets=pets, breeds=breeds, ages=ages, genders=genders, current=current, filters=filters)
 
 
 
@@ -390,6 +497,35 @@ def add_pet():
         #add_photo(pet_id, )
 
         return redirect("/pets")
+
+
+
+@app.route("/remove/<pet_id>", methods=["GET", "POST"])
+@login_required
+def remove(pet_id):
+    user = session.get("user")
+    user_id = session.get("user_id")
+
+    db = sqlite3.connect("app.db")
+    c = db.cursor()
+    q = c.execute("SELECT * FROM pets WHERE id = ?", (pet_id, )).fetchall()
+
+    if len(q) < 1:
+        return redirect("/")
+    
+    pet = q[0]
+    if pet[1] != user_id:
+        return redirect("/")
+
+    if request.method == "GET":
+        return render_template("confirmation.html", user=user, user_id=user_id, pet=pet)
+    else:
+        c.execute("DELETE FROM pets WHERE id = ?", (pet_id, ))
+        c.execute("DELETE FROM photos WHERE pet_id = ?", (pet_id, ))
+        db.commit()
+        db.close()
+        shutil.rmtree("static/uploads/" + pet_id)
+        return redirect("/account")
 
 
 

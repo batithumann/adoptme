@@ -9,19 +9,26 @@
 
         <div class="col-3">
             <h5>Filters</h5>
-            <form>
+            <form action="" method=get id="filter">
                 <strong>Breed</strong>
                 {% for breed in breeds %}
                 <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="{{ breed[0] }}">
-                    <label class="form-check-label" for="{{ breed[0] }}">{{ breed[0] }}</label>
+                {% if breed[0] in filters %}
+                    <input name="breed{{ breed[0] }}" type="checkbox" onchange=submit() class="form-check-input" id="{{ breed[0]|replace(' ','') }}" checked>
+                {% else %}
+                    <input name="breed{{ breed[0] }}" type="checkbox" onchange=submit() class="form-check-input" id="{{ breed[0]|replace(' ','') }}">
+                {% endif %}
+                    <label class="form-check-label" for="{{ breed[0]|replace(' ','') }}">{{ breed[0] }}</label>
                 </div>
                 {% endfor %}
-
                 <strong>Age</strong>
                 {% for age in ages %}
                 <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="{{ age[0] }}">
+                {% if age[0] in filters %}
+                    <input name="age{{ age[0] }}" type="checkbox" onchange=submit() class="form-check-input" id="{{ age[0] }}" checked>
+                {% else %}
+                    <input name="age{{ age[0] }}" type="checkbox" onchange=submit() class="form-check-input" id="{{ age[0] }}">
+                {% endif %}
                     <label class="form-check-label" for="{{ age[0] }}">{{ age[0] }}</label>
                 </div>
                 {% endfor %}
@@ -29,7 +36,11 @@
                 <strong>Gender</strong>
                 {% for gender in genders %}
                 <div class="form-check">
-                    <input type="checkbox" class="form-check-input" id="{{ gender[0] }}">
+                {% if gender[0] in filters %}
+                    <input name="gender{{ gender[0] }}" type="checkbox" onchange=submit() class="form-check-input" id="{{ gender[0] }}" checked>
+                {% else %}
+                    <input name="gender{{ gender[0] }}" type="checkbox" onchange=submit() class="form-check-input" id="{{ gender[0] }}">
+                {% endif %}
                     <label class="form-check-label" for="{{ gender[0] }}">{{ gender[0] }}</label>
                 </div>
                 {% endfor %}
@@ -40,6 +51,7 @@
             <table class="table">
                 <thead>
                     <tr>
+                        <th scope="col"></th>
                         <th scope="col">Name</th>
                         <th scope="col">Age</th>
                         <th scope="col">Gender</th>
@@ -47,12 +59,18 @@
                         <th scope="col">Breed</th>
                         <th scope="col">Entry Date</th>
                         <th scope="col">Description</th>
-                        <th scope="col">Photo</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for pet in pets %}
                     <tr>
+                        <td>
+                            {% if pet[9] %}
+                            <a href="/pets/{{ pet[5]|lower }}s/{{ pet[0] }}">
+                            <img src="/static/uploads/{{ pet[0] }}/{{ pet[9] }}" class="img-thumbnail">
+                            </a>
+                            {% endif %}
+                        </td>
                         <td><a href="/pets/{{ pet[5]|lower }}s/{{ pet[0] }}">{{ pet[2] }}</a></td>
                         <td>{{ pet[3] }}</td>
                         <td>{{ pet[4] }}</td>
@@ -60,11 +78,6 @@
                         <td>{{ pet[6] }}</td>
                         <td>{{ pet[7].strftime('%B %d %Y') }}</td>
                         <td>{{ pet[8] }}</td>
-                        <td>
-                            {% if pet[9] %}
-                            <img src="/static/uploads/{{ pet[0] }}/{{ pet[9] }}" class="img-fluid">
-                            {% endif %}
-                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
