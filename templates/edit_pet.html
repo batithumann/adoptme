@@ -4,65 +4,67 @@
 
 {% block main %}
 <div class="container pets">
-    <form action="/add_pet" method="post" enctype="multipart/form-data">
+    <form action="/pets/{{details[5]}}/{{details[0]}}/edit" method="post" enctype="multipart/form-data">
         <div class="form-group">
             <label for="nameInput">Name</label>
-            <input name="name" type="text" class="form-control" id="nameInput" required>
+            <input name="name" type="text" class="form-control" id="nameInput" value="{{details[2]}}" required>
         </div>
         <div class="form-group">
             <label for="animalSelect">Type</label>
-            <select name="animal" class="custom-select" id="animalSelect" required>
-                <option disabled selected>Choose type</option>
-                <option>Dog</option>
-                <option>Cat</option>
+            <select name="animal" class="custom-select" id="animalSelect" value="{{details[5]}}" required>
+                <option disabled>Choose type</option>
+                <option {% if details[5] == 'Dog' %}selected{% endif %}>Dog</option>
+                <option {% if details[5] == 'Cat' %}selected{% endif %}>Cat</option>
             </select>
         </div>
         <div class="form-group">
             <label for="ageSelect">Age</label>
             <select name="age" class="custom-select" id="ageSelect" required>
                 <option>Unknown</option>
-                <option>Baby</option>
-                <option>Young</option>
-                <option>Adult</option>
-                <option>Senior</option>
+                <option {% if details[3] == 'Baby' %}selected{% endif %}>Baby</option>
+                <option {% if details[3] == 'Young' %}selected{% endif %}>Young</option>
+                <option {% if details[3] == 'Adult' %}selected{% endif %}>Adult</option>
+                <option {% if details[3] == 'Senior' %}selected{% endif %}>Senior</option>
             </select>
         </div>
         <div class="form-group">
             <label for="genderSelect">Gender</label>
             <select name="gender" class="custom-select" id="genderelect" required>
                 <option>Unknown</option>
-                <option>Male</option>
-                <option>Female</option>
+                <option {% if details[4] == 'Male' %}selected{% endif %}>Male</option>
+                <option {% if details[4] == 'Female' %}selected{% endif %}>Female</option>
             </select>
         </div>
         <div class="form-group">
             <label for="breedSelect">Breed</label>
             <select name="breed" class="custom-select" id="breedSelect" required>
-                <option disabled selected>-</option>
+                <option disabled>-</option>
                 {% for cat in cats %}
-                    <option class="catBreed">{{ cat }}</option>
+                    <option class="catBreed" {% if details[6] == cat %}selected{% endif %} 
+                    {% if details[5] == 'Dog' %}hidden{% endif %}>{{ cat }}</option>
                 {% endfor %}
                 {% for dog in dogs %}
-                    <option class="dogBreed">{{ dog }}</option>
+                    <option class="dogBreed" {% if details[6] == dog %}selected{% endif %}
+                    {% if details[5] == 'Cat' %}hidden{% endif %}>{{ dog }}</option>
                 {% endfor %}
-                <option hidden id="otherBreed">Other / Unknown</option>
+                <option>Other / Unknown</option>
             </select>
         </div>
         <div class="form-group">
             <label for="description">Add a short description: (<span id="characters">800</span> character<span id="plural">s</span>)</label>
-            <textarea name="description" class="form-control" id="description" rows="3" maxlength="800"></textarea>
+            <textarea name="description" class="form-control" id="description" rows="3" maxlength="800">{{details[8]}}</textarea>
         </div>
 
         <p>Select at least one and up to 4 photos</p>
         <div class="row">
             <div class="col-md-3">
                 <div class="form-group" id="photo1div">
-                    <input name="photo1" type="file" accept="image/*" id="photo_file1" class="form-control-file" required>
+                    <input name="photo1" type="file" accept="image/*" id="photo_file1" class="form-control-file" {% if not photos[0] %}required{% endif %}>
                     <p id="status1"></p>
                     <div>
-                        <img id="output1" class="img-thumbnail" hidden>
+                        <img id="output1" class="img-thumbnail" {% if photos[0] %}src="/static/uploads/{{details[0]}}/{{photos[0][2]}}"{% else %}hidden{% endif %}>
                     </div>
-                    <input type="button" id="removePhoto1" value="Remove" hidden>
+                    <input type="button" id="removePhoto1" value="Remove" {% if not photos[0] %}hidden{% endif %}>
                 </div>
             </div>
 
@@ -71,9 +73,9 @@
                     <input name="photo2" type="file" accept="image/*" id="photo_file2" class="form-control-file">
                     <p id="status2"></p>
                     <div>
-                        <img id="output2" class="img-thumbnail" hidden>
+                        <img id="output2" class="img-thumbnail" {% if photos[1] %}src="/static/uploads/{{details[0]}}/{{photos[1][2]}}"{% else %}hidden{% endif %}>
                     </div>
-                    <input type="button" id="removePhoto2" value="Remove" hidden>
+                    <input type="button" id="removePhoto2" value="Remove" {% if not photos[1] %}hidden{% endif %}>
                 </div>
             </div>
 
@@ -82,9 +84,9 @@
                     <input name="photo3" type="file" accept="image/*" id="photo_file3" class="form-control-file">
                     <p id="status3"></p>
                     <div>
-                        <img id="output3" class="img-thumbnail" hidden>
+                        <img id="output3" class="img-thumbnail" {% if photos[2] %}src="/static/uploads/{{details[0]}}/{{photos[2][2]}}"{% else %}hidden{% endif %}>
                     </div>
-                    <input type="button" id="removePhoto3" value="Remove" hidden>
+                    <input type="button" id="removePhoto3" value="Remove" {% if not photos[2] %}hidden{% endif %}>
                 </div>
             </div>
 
@@ -93,23 +95,25 @@
                     <input name="photo4" type="file" accept="image/*" id="photo_file4" class="form-control-file">
                     <p id="status4"></p>
                     <div>
-                        <img id="output4" class="img-thumbnail" hidden>
+                        <img id="output4" class="img-thumbnail" {% if photos[3] %}src="/static/uploads/{{details[0]}}/{{photos[3][2]}}"{% else %}hidden{% endif %}>
                     </div>
-                    <input type="button" id="removePhoto4" value="Remove" hidden>
+                    <input type="button" id="removePhoto4" value="Remove" {% if not photos[3] %}hidden{% endif %}>
                 </div>
             </div>
         </div>
-        
+
         <input name="owner" type="text" value="{{ user_id }}" hidden>
-        <input type="submit" value="Submit">
+        <input name="delete1" type="text" value="0" hidden id="delete1">
+        <input name="delete2" type="text" value="0" hidden id="delete2">
+        <input name="delete3" type="text" value="0" hidden id="delete3">
+        <input name="delete4" type="text" value="0" hidden id="delete4">
+
+        <input type="submit" value="Save changes">
     </form>
 </div>
 
 
 <script>
-
-[].slice.call(document.getElementsByClassName("catBreed")).forEach(el => el.hidden = true);
-[].slice.call(document.getElementsByClassName("dogBreed")).forEach(el => el.hidden = true);
 
 document.getElementById("animalSelect").onchange = function() {
     [].slice.call(document.getElementsByClassName("dogBreed")).forEach(el => el.hidden = true);
@@ -121,56 +125,72 @@ document.getElementById("animalSelect").onchange = function() {
         [].slice.call(document.getElementsByClassName("dogBreed")).forEach(el => el.hidden = false);
     }
         document.getElementById("breedSelect").value = "-";
-        document.getElementById("otherBreed").hidden = false;
 }
+
 
 
 document.getElementById("photo_file1").onchange = function() {
     if (document.getElementById("photo_file1").value != null) {
         document.getElementById("removePhoto1").hidden = false;
         document.getElementById("output1").hidden = false;
+        document.getElementById("delete1").value = "0";
     }
 }
 document.getElementById("removePhoto1").onclick = function() {
     document.getElementById("photo_file1").value = null;
     document.getElementById("removePhoto1").hidden = true;
     document.getElementById("output1").hidden = true;
+    {% if photos[0] %}
+    document.getElementById("delete1").value = "{{photos[0][2]}}";
+    {% endif %}
 }
 
 document.getElementById("photo_file2").onchange = function() {
     if (document.getElementById("photo_file2").value != null) {
         document.getElementById("removePhoto2").hidden = false;
         document.getElementById("output2").hidden = false;
+        document.getElementById("delete2").value = "0";
     }
 }
 document.getElementById("removePhoto2").onclick = function() {
     document.getElementById("photo_file2").value = null;
     document.getElementById("removePhoto2").hidden = true;
     document.getElementById("output2").hidden = true;
+    {% if photos[1] %}
+    document.getElementById("delete2").value = "{{photos[1][2]}}";
+    {% endif %}
 }
 
 document.getElementById("photo_file3").onchange = function() {
     if (document.getElementById("photo_file3").value != null) {
         document.getElementById("removePhoto3").hidden = false;
         document.getElementById("output3").hidden = false;
+        document.getElementById("delete3").value = "0";
     }
 }
 document.getElementById("removePhoto3").onclick = function() {
     document.getElementById("photo_file3").value = null;
     document.getElementById("removePhoto3").hidden = true;
     document.getElementById("output3").hidden = true;
+    {% if photos[2] %}
+    document.getElementById("delete3").value = "{{photos[2][2]}}";
+    {% endif %}
 }
 
 document.getElementById("photo_file4").onchange = function() {
     if (document.getElementById("photo_file4").value != null) {
         document.getElementById("removePhoto4").hidden = false;
         document.getElementById("output4").hidden = false;
+        document.getElementById("delete4").value = "0";
     }
 }
 document.getElementById("removePhoto4").onclick = function() {
     document.getElementById("photo_file4").value = null;
     document.getElementById("removePhoto4").hidden = true;
     document.getElementById("output4").hidden = true;
+    {% if photos[3] %}
+    document.getElementById("delete4").value = "{{photos[3][2]}}";
+    {% endif %}
 }
 
 document.getElementById("description").onkeyup = function() {
@@ -275,6 +295,4 @@ document.getElementById("description").onkeyup = function() {
         });
     }
 </script>
-
-
 {% endblock %}

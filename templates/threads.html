@@ -4,20 +4,24 @@
 
 {% block main %}
 
-<div class="container">
+<div class="container account">
     <table class="table">
         <thead>
             <tr>
-                <th scope="col">Subject</th>
+                <th scope="col">Pet name</th>
                 <th scope="col">Correspondent</th>
                 <th scope="col">Date</th>
             </tr>
         </thead>
         <tbody>
         {% for thread in threads %}
+            {% if thread[0] in unread_threads %}
+            <tr class="pink-bg">
+            {% else %}
             <tr>
+            {% endif %}
                 <td><a href="/messages/{{thread[0]}}" >{{ thread[3] }}</a></td>
-                <td><a href="/members/{{thread[4]}}" >{{ thread[4] }}</td>
+                <td><a href="/members/{{thread[1]}}" >{{ thread[4] }}</td>
                 <td>{{ thread[2][:19] }}</td>
             </tr>
         {% endfor %}

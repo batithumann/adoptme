@@ -5,9 +5,16 @@
 {% block main %}
 
 <div class="container">
-    {% for cat in cats %}
-    {{cat}}<br>
-    {% endfor %}
+<h3>{{random_cat}}</h3>
+
+<p>Name: {{random_cat.breeds[0].name}}</p>
+<p>Name: {{random_cat.breeds[0].name}}</p>
+
+<img src="{{random_cat.url}}" class="img-fluid">
+
+{% for breed in breeds %}
+{{breed.id}}<br>
+{% endfor %}
 </div>
 
 

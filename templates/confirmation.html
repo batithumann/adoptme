@@ -11,7 +11,7 @@
     <h4>Are you sure you want to remove {{ pet[2] }} from adoption?</h4>
     <form class="form-signin" action="/remove/{{ pet[0] }}" method="POST">
         <button class="btn btn-lg btn-primary btn-block" type="submit">I'm sure</button>
-        <a href="/account" class="btn btn-lg btn-secondary btn-block">No, go back</a>
+        <a href="/account/pets" class="btn btn-lg btn-info btn-block">No, go back</a>
     </form>
 </div>
 {% endblock %}

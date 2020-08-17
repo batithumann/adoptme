@@ -1,0 +1,32 @@
+{% extends "layout.html" %} {% block title %} Adopt Me! {% endblock %} {% block main %}
+
+<div class="container account">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="list-group">
+                <a href="/account" class="list-group-item list-group-item-action">
+                    About me
+                </a>
+                <a href="/account/password" class="list-group-item list-group-item-action">Account settings</a>
+                <a href="/account/pets" class="list-group-item list-group-item-action">My pets</a>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <h3>Add a pet</h3>
+            <p>Click <a href="/add_pet">here</a> to put a new pet up for adoption</p>
+            <h3>Your pets</h3>
+            {% if rows|length == 0 %}
+            <h5>You don't have any pets listed for adoption</h5>
+            {% endif %}
+            <ol>
+                {% for pet in rows %}
+                <li><a href="/pets/{{ pet[5]|lower }}s/{{ pet[0] }}">{{ pet[2] }}</a> - (<a href="/pets/{{ pet[5]|lower }}s/{{ pet[0] }}/edit">Edit</a> or <a href="/remove/{{ pet[0] }}">Remove</a>)</li>
+                {% endfor %}
+            </ol>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}

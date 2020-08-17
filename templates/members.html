@@ -1,14 +1,77 @@
 {% extends "layout.html" %} {% block title %} Member details {% endblock %} {% block main %}
 
-<div class="container">
+<div class="container account">
 
-    {% if member != user %}
-        <h4><a href="/contact/{{ member }}">Send a message</a></h4>
+    {% if member[0] == user_id %}
+    <p><a href="/account">Edit your profile</a></p>
     {% endif %}
+    
+    {% if member[1] == 'Yes' %}
+    <h1>{{ member[4] }}</h1>
+    {% else %}
+    <h1>{{member[2]}} {{member[3]}}</h1>
+    {% endif %}
+    <table class="table">
+        <tbody>
+            <tr>
+                <td><img src="https://img.icons8.com/android/32/000000/marker.png" title="Location"/> {{ member[6] }}</td>
+            </tr>
+            {% if member[1] == 'Yes' %}
+            <tr>
+                <td><img src="https://img.icons8.com/material-rounded/32/000000/filled-message.png" title="Email address"/> <a href="mailto:{{member[5]}}">{{member[5]}}</a></td>
+            </tr>
+            {% endif %}
+            {% if member[1] == 'Yes' and member[8] %}
+            <tr>
+                <td><img src="https://img.icons8.com/ios-filled/32/000000/phone.png" title="Phone number"/> {{member[8]}}</td>
+            </tr>
+            {% endif %}
+            {% if member[1] == 'Yes' and member[9] %}
+            <tr>
+                <td>
+                    <img src="https://img.icons8.com/material-sharp/32/000000/home.png" title="Website"/> 
+                    <a href="http://{{member[9]|replace('http://','')|replace('https://','')}}">{{member[9]|replace('http://','')|replace('https://','')}}</a>
+                </td>
+            </tr>
+            {% endif %}
+            {% if member[10] or member[11] or member[12] %}
+            <tr>
+                <td>
+                    {% if member[10] %}
+                        <a href="https://www.facebook.com/{{member[10]}}"><img src="https://img.icons8.com/android/32/000000/facebook.png" title="Facebook"/></a> 
+                    {% endif %}
+                    {% if member[11] %}
+                        <a href="https://www.instagram.com/{{member[11]}}"><img src="https://img.icons8.com/ios-filled/32/000000/instagram-new.png" title="Instagram"/></a> 
+                    {% endif %}
+                    {% if member[12] %}
+                        <a href="https://twitter.com/{{member[12]}}"><img src="https://img.icons8.com/material-rounded/32/000000/twitter.png" title="Twitter"/></a>
+                    {% endif %}
+                </td>
+            </tr>
+            {% endif %}
+        </tbody>
+    </table>
 
-    {% if user and member == user %}
-        <h4><a href="/messages">View your messages</a></h4>
+    {% if pets|length > 0 %}
+    <h4>Our pets</h4>
+    <div class="row row-cols-1 row-cols-md-4">
+
+        {% for pet in pets %}
+        <div class="col mb-3">
+            <a href="/pets/{{pet[5]|lower}}s/{{pet[0]}}">
+                <div class="card text-center h-100">
+                    <img src="/static/uploads/{{pet[0]}}/{{pet[9]}}" class="card-img-top">
+                    <div class="card-body">
+                        <h5 class="card-title">{{pet[2]}}</h5>
+                    </div>
+                </div>
+            </a>
+        </div>
+        {% endfor %}
+
+    </div>
     {% endif %}
+    
 </div>
 
 {% endblock %}

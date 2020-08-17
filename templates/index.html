@@ -6,9 +6,73 @@
 
 {% block main %}
 
-<div class="container">
-    <ul>
-    </ul>
-</div>
+<div class="jumbotron">
+        <div class="container">
+            <h1 class="display-4">Find your new best friend today</h1>
+            <p class="lead">or help someone else find one</p>
+            <hr class="my-4">
+            <a class="btn btn-primary btn-lg" href="/about" role="button">Learn more</a>
+
+        </div>
+        <small class="right">Photo by <a href="https://unsplash.com/@krista?utm_source=unsplash&amp;utm_medium=referral&amp;utm_content=creditCopyText">Krista Mangulsone</a> on <a href="https://unsplash.com/photos/9gz3wfHr65U">Unsplash</a></small>
+    </div>
+
+    {% if latest|length > 0 %}
+    <section id="new-pets">
+        <div class="container">
+            <h2 class="center">New pets available for adoption</h2>
+            <div class="row row-cols-1 row-cols-md-5">
+
+                {% for pet in latest %}
+                <div class="col mb-3">
+                    <a href="/pets/{{pet[5]|lower}}s/{{pet[0]}}">
+                        <div class="card text-center h-100">
+                            <img src="/static/uploads/{{pet[0]}}/{{pet[10]}}" class="card-img-top">
+                            <div class="card-body">
+                                <h5 class="card-title">{{pet[2]}}</h5>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+                <div class="col mb-3">
+                    <a href="/pets">
+                        <div class="card text-center h-100">
+                            <img src="/static/img/paw.png" class="card-img-top">
+                            <div class="card-body" style="background-color:#ffa8ba;border-radius:0px 0px 16px 16px;">
+                                <h5 class="card-title">View all pets</h5>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </section>
+    {% endif %}
+
+    <section id="resources">
+        <div class="container">
+            <div class="row">
+                <div class="col">
+                    <h2 class="center" style="margin-bottom:50px;">Dog breeds</h2>
+                    <h4 class="center">{{random_dog.breeds[0].name}}</h4>
+                    <p class="center">{{random_dog.breeds[0].temperament}}</p>
+                    <div class="center">
+                        <img src="{{random_dog.url}}" class="img-fluid index-img">
+                    </div>
+                </div>
+                <div class="col">
+                    <h2 class="center" style="margin-bottom:50px;">Cat breeds</h2>
+                    <h4 class="center">{{random_cat.breeds[0].name}}</h4>
+                    <p class="center">{{random_cat.breeds[0].temperament}}</p>
+                    <div class="center">
+                        <img src="{{random_cat.url}}" class="img-fluid index-img">
+                </div>
+            </div>
+            
+        </div>
+    </section>
+
 
 {% endblock %}

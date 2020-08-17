@@ -21,22 +21,117 @@
 </head>
 
 <body>
-    <div class="container">
-        <p><a href="/">Home</a></p>
-        {% if user %}
-        <p>Hello, <a href="/members/{{ user }}">{{ user }}</a>. <a href="/logout">Log out</a></p>
-        <p><a href="/messages">View your messages</a></p>
-        <p><a href="/account">Manage your account</a></p>
-        <p><a href="/add_pet">Add pet</a></p>
-        {% else %}
-        <p>Hello, visitor. Please <a href="/register">register</a> or <a href="/login">log in</a></p>
-        {% endif %}
-        <p><a href="/pets">View all pets</a></p>
-        <p><a href="/pets/dogs">View all dogs</a></p>
-        <p><a href="/pets/cats">View all cats</a></p>
-    </div>
+
+<header>
+        <!-- Nav -->
+        <nav class="navbar navbar-expand-lg">
+            <div class="container">
+                <div class="d-flex justify-content-start align-items-center">
+                    <!-- Logo -->
+                    <a class="navbar-brand" href="/">
+                        <img src="/static/img/website.png" id="logo" class="d-inline-block align-top">
+                    </a>
+                    <ul class="navbar-nav">
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-secondary" href="/pets/dogs"><svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
+width="32" height="32"
+viewBox="0 0 172 172"
+style=" fill:#000000;"><g fill="none" fill-rule="nonzero" stroke="none" stroke-width="1" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10" stroke-dasharray="" stroke-dashoffset="0" font-family="none" font-weight="none" font-size="none" text-anchor="none" style="mix-blend-mode: normal"><path d="M0,172v-172h172v172z" fill="none"></path><g fill="#01533b"><path d="M109.865,3.44c-0.3225,0.01344 -0.55094,0.1075 -0.86,0.215c-1.23625,0.43 -2.20375,1.49156 -2.365,2.795l-6.235,49.9875l40.635,20.5325v-15.05h17.2c1.37063,0 2.58,-0.77937 3.1175,-2.0425l10.32,-24.08c0.36281,-0.84656 0.45688,-1.8275 0.1075,-2.6875c-0.34937,-0.86 -1.075,-1.58562 -1.935,-1.935l-34.4,-13.76c-0.40312,-0.16125 -0.84656,-0.215 -1.29,-0.215h-8.9225l-12.685,-12.7925c-0.69875,-0.69875 -1.73344,-1.02125 -2.6875,-0.9675zM135.88,30.96c2.84875,0 5.16,2.31125 5.16,5.16c0,2.84875 -2.31125,5.16 -5.16,5.16c-2.84875,0 -5.16,-2.31125 -5.16,-5.16c0,-2.84875 2.31125,-5.16 5.16,-5.16zM9.9975,44.505c-1.74687,0 -3.46687,0.49719 -4.73,1.29c-3.17125,1.70656 -5.29437,4.66281 -5.6975,8.0625c-0.38969,3.23844 0.87344,6.38281 3.225,8.4925l10.965,10.6425v78.045c0,5.97969 3.77594,11.36813 9.3525,13.2225c1.38406,0.38969 2.795,0.645 4.1925,0.645c7.69969,0 13.975,-6.08719 13.975,-13.545v-37.84h65.36v37.5175c0,5.97969 3.77594,11.36813 9.3525,13.2225c1.38406,0.38969 2.795,0.645 4.1925,0.645c3.70875,0 7.25625,-1.43781 9.89,-3.9775c2.66063,-2.55312 4.085,-5.93937 4.085,-9.5675v-40.635l6.665,-16.555c0.16125,-0.40312 0.215,-0.84656 0.215,-1.29v-8.2775l-51.9225,-26.1225h-60.845l-10.75,-10.6425c-2.06937,-2.06937 -4.74344,-3.3325 -7.525,-3.3325zM48.16,120.4v23.3275l8.4925,14.2975c2.74125,4.31344 7.31,6.9875 11.9325,6.9875c0.95406,0 1.81406,-0.1075 2.6875,-0.3225c4.47469,-1.06156 8.12969,-4.03125 9.89,-8.17c1.72,-4.03125 1.43781,-8.64031 -0.7525,-12.3625l-13.975,-23.7575z"></path></g></g></svg>
+ Adopt a dog</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-secondary" href="/pets/cats"><svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
+width="32" height="32"
+viewBox="0 0 172 172"
+style=" fill:#000000;"><g fill="none" fill-rule="nonzero" stroke="none" stroke-width="1" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10" stroke-dasharray="" stroke-dashoffset="0" font-family="none" font-weight="none" font-size="none" text-anchor="none" style="mix-blend-mode: normal"><path d="M0,172v-172h172v172z" fill="none"></path><g fill="#01533b"><path d="M51.6,13.76c-1.89978,0.00019 -3.43981,1.54022 -3.44,3.44c0,15.41611 1.65091,25.99396 3.35265,32.80094c0.35229,1.40914 0.71491,2.57559 1.06828,3.6886c-0.63515,2.72266 -0.98094,5.53656 -0.98094,8.40515c0,8.98872 4.57036,17.21312 11.38156,23.67688l-19.4575,55.26844h-14.28406c-4.74376,0 -8.6,3.85968 -8.6,8.6c0,4.74032 3.85624,8.6 8.6,8.6h37.6586c-0.38528,-1.55144 -1.05775,-3.16517 -2.22391,-3.99765c-2.23944,-1.60304 -3.17506,-4.18971 -2.4389,-6.74563c0.28208,-0.98728 0.72331,-1.84352 1.10859,-2.59344c0.23392,-0.45408 0.4938,-0.90263 0.63828,-1.37735c1.27968,-4.22432 0.17593,-7.98424 -3.03015,-10.32c-1.5308,-1.118 -1.86722,-3.26966 -0.74578,-4.8039c1.11456,-1.53424 3.25934,-1.87394 4.80391,-0.7525c5.6244,4.10392 7.69969,10.79219 5.54969,17.8786c-0.29584,0.97008 -0.72348,1.80353 -1.10188,2.53969c-0.14792,0.28552 -0.30616,0.56448 -0.43,0.84656c3.18888,2.50776 4.41981,6.46339 4.89797,9.33235h28.76969c-0.79464,-2.07088 -2.61397,-5.67697 -5.32125,-7.26969c-2.9412,-1.72688 -4.37391,-5.24896 -4.37391,-10.77016c-0.00688,-9.00248 0.03671,-20.33626 0.04703,-23.11922l-20.23687,-23.9389l0.0739,-0.08062c7.4132,4.20712 15.81137,6.69187 23.60297,6.69187c7.69184,0 15.84523,-2.29867 23.05203,-6.27531l-19.60531,23.19313c-0.00688,1.70968 -0.05391,13.93506 -0.04703,23.52234c0,4.08672 0.97062,4.83406 0.98094,4.8375c6.11632,3.59824 8.52684,11.3678 8.7814,12.24156c0.09288,0.32336 0.08063,0.64758 0.08063,0.9675h20.98937c0.54008,0 1.05399,-0.25859 1.37735,-0.69203c0.32336,-0.43 0.42683,-0.99228 0.27547,-1.51172c-0.09288,-0.32336 -2.36387,-7.92087 -8.00203,-11.24047c-5.5556,-3.268 -1.4634,-29.16158 2.78156,-41.39422c1.11456,-3.21296 1.67297,-6.57814 1.67297,-9.9975v-6.54406c7.28248,-6.56696 12.21469,-15.17099 12.21469,-24.77203c0,-2.87369 -0.34828,-5.69142 -0.98094,-8.41859c0.35224,-1.11025 0.71718,-2.27075 1.06828,-3.67516c1.70177,-6.80713 3.35265,-17.38482 3.35265,-32.80094c-0.00019,-1.89978 -1.54022,-3.43981 -3.44,-3.44c0,0 -16.01276,-0.12613 -29.58937,9.43984c-4.708,-1.62202 -9.73478,-2.55984 -14.96266,-2.55984c-5.32207,0 -10.44598,0.95892 -15.2314,2.61359c-13.59144,-9.61585 -29.65656,-9.49359 -29.65656,-9.49359zM55.255,21.21781c3.29286,0.23323 10.48418,1.23723 18.07344,5.62359c-6.76802,3.86999 -12.43396,9.31409 -16.26609,15.76891c-0.88821,-5.41306 -1.60194,-12.54014 -1.80735,-21.3925zM137.385,21.21781c-0.20479,8.82534 -0.91626,15.9313 -1.80063,21.33875c-3.81943,-6.45847 -9.46165,-11.90032 -16.1989,-15.76219c7.56224,-4.35052 14.71727,-5.34408 17.99953,-5.57656zM78.97219,51.73437c0.97774,0 1.89916,0.2035 2.77485,0.50391c-2.11186,0.51157 -3.51019,2.51829 -3.25878,4.67664c0.25141,2.15835 2.07353,3.78995 4.24643,3.80242c2.07322,-0.00129 3.85032,-1.48174 4.2261,-3.52063c0.38318,0.97452 0.6114,2.02692 0.6114,3.13765c0,4.75064 -3.8528,8.6 -8.6,8.6c-4.75064,0 -8.6,-3.84936 -8.6,-8.6c0,-4.75064 3.84936,-8.6 8.6,-8.6zM113.34531,51.73437c0.99566,0 1.93926,0.20632 2.82859,0.51735c-2.09478,0.53619 -3.46556,2.54457 -3.20155,4.69071c0.26401,2.14614 2.08068,3.76241 4.24296,3.77492c1.99662,-0.00039 3.7303,-1.37509 4.18578,-3.31906c0.33592,0.92014 0.54422,1.8995 0.54422,2.93609c0,4.75064 -3.84936,8.6 -8.6,8.6c-4.75064,0 -8.6,-3.84936 -8.6,-8.6c0,-4.75064 3.84936,-8.6 8.6,-8.6zM91.67735,68.8h9.62797c1.32784,0 2.41203,1.07747 2.41203,2.40531c0,1.32784 -1.08419,2.41203 -2.41203,2.41203c-1.32784,0 -2.40531,1.07747 -2.40531,2.40531c0,2.408 -2.40531,2.41203 -2.40531,2.41203c0,0 -2.41203,-0.00403 -2.41203,-2.41203c0,-1.32784 -1.07747,-2.40531 -2.40531,-2.40531c-1.32784,0 -2.41203,-1.08419 -2.41203,-2.41203c0,-1.32784 1.08419,-2.40531 2.41203,-2.40531z"></path></g></g></svg>
+ Adopt a cat</a>
+                        </li>
+                    </ul>
+                </div>
+
+                <div>
+                    <ul class="navbar-nav">
+                        {% if user %}
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-secondary" href="/messages">
+                                <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
+width="32" height="32"
+viewBox="0 0 172 172"
+style=" fill:#000000;"><g fill="none" fill-rule="nonzero" stroke="none" stroke-width="1" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10" stroke-dasharray="" stroke-dashoffset="0" font-family="none" font-weight="none" font-size="none" text-anchor="none" style="mix-blend-mode: normal"><path d="M0,172v-172h172v172z" fill="none"></path><g fill="#01533b"><path d="M28.66667,28.66667c-7.91917,0 -14.33333,6.41417 -14.33333,14.33333v12.41569l7.16667,4.49316l7.16667,4.49316l57.33333,35.93132l57.33333,-35.69336l7.16667,-4.46517l7.16667,-4.45117v-12.72363c0,-7.91917 -6.41417,-14.33333 -14.33333,-14.33333zM28.66667,43h114.66667v5.51497l-57.33333,35.67936l-57.33333,-35.93132zM14.33333,72.32455v56.67545c0,7.91917 6.41417,14.33333 14.33333,14.33333h114.66667c7.91917,0 14.33333,-6.41417 14.33333,-14.33333v-56.39551l-14.33333,8.91634v47.47917h-114.66667v-47.68913z"></path></g></g></svg>
+{% if unread_messages > 0 %}
+<span class="badge badge-secondary">{{ unread_messages }}</span>
+{% endif %}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-secondary" href="/account">
+                                <svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
+width="32" height="32"
+viewBox="0 0 172 172"
+style=" fill:#000000;"><g fill="none" fill-rule="nonzero" stroke="none" stroke-width="1" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10" stroke-dasharray="" stroke-dashoffset="0" font-family="none" font-weight="none" font-size="none" text-anchor="none" style="mix-blend-mode: normal"><path d="M0,172v-172h172v172z" fill="none"></path><g fill="#01533b"><path d="M86,21.5c-17.7627,0 -32.25,14.4873 -32.25,32.25c0,17.7627 14.4873,32.25 32.25,32.25c17.7627,0 32.25,-14.4873 32.25,-32.25c0,-17.7627 -14.4873,-32.25 -32.25,-32.25zM86,86c-29.60449,0 -53.75,24.14551 -53.75,53.75h10.75c0,-23.80957 19.19043,-43 43,-43c23.80957,0 43,19.19043 43,43h10.75c0,-29.60449 -24.14551,-53.75 -53.75,-53.75zM86,32.25c11.92578,0 21.5,9.57422 21.5,21.5c0,11.92578 -9.57422,21.5 -21.5,21.5c-11.92578,0 -21.5,-9.57422 -21.5,-21.5c0,-11.92578 9.57422,-21.5 21.5,-21.5z"></path></g></g></svg>
+ {{ user }}
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-secondary" href="/logout"><svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
+width="32" height="32"
+viewBox="0 0 172 172"
+style=" fill:#000000;"><g fill="none" fill-rule="nonzero" stroke="none" stroke-width="1" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10" stroke-dasharray="" stroke-dashoffset="0" font-family="none" font-weight="none" font-size="none" text-anchor="none" style="mix-blend-mode: normal"><path d="M0,172v-172h172v172z" fill="none"></path><g fill="#01533b"><path d="M43,14.33333c-7.90483,0 -14.33333,6.4285 -14.33333,14.33333v114.66667c0,7.90483 6.4285,14.33333 14.33333,14.33333h86c7.90483,0 14.33333,-6.4285 14.33333,-14.33333v-34.04167l-14.31934,10.736v23.30566h-86.014v-114.66667h86v23.29167l14.33333,10.75v-34.04167c0,-7.90483 -6.4285,-14.33333 -14.33333,-14.33333zM114.66667,59.125v19.70833h-35.83333v14.33333h35.83333v19.70833l35.83333,-26.875z"></path></g></g></svg>
+ Log out</a>
+                        </li>
+                        {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-secondary" href="/register"><svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
+width="32" height="32"
+viewBox="0 0 172 172"
+style=" fill:#000000;"><g fill="none" fill-rule="nonzero" stroke="none" stroke-width="1" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10" stroke-dasharray="" stroke-dashoffset="0" font-family="none" font-weight="none" font-size="none" text-anchor="none" style="mix-blend-mode: normal"><path d="M0,172v-172h172v172z" fill="none"></path><g fill="#01533b"><path d="M64.5,10.75c-20.72315,0 -37.625,16.90185 -37.625,37.625c0,12.95459 6.61377,24.46045 16.62891,31.24219c-19.16943,8.23047 -32.75391,27.25293 -32.75391,49.38281h10.75c0,-23.80957 19.19043,-43 43,-43c7.39063,0 14.27734,1.93164 20.32422,5.20703c-5.96289,7.39063 -9.57422,16.83887 -9.57422,27.04297c0,23.68359 19.31641,43 43,43c23.68359,0 43,-19.31641 43,-43c0,-23.68359 -19.31641,-43 -43,-43c-9.38526,0 -18.11963,3.08643 -25.19531,8.23047c-2.37256,-1.49072 -4.95508,-2.75049 -7.55859,-3.86328c10.01514,-6.78174 16.62891,-18.2876 16.62891,-31.24219c0,-20.72315 -16.90185,-37.625 -37.625,-37.625zM64.5,21.5c14.90723,0 26.875,11.96778 26.875,26.875c0,14.90723 -11.96777,26.875 -26.875,26.875c-14.90722,0 -26.875,-11.96777 -26.875,-26.875c0,-14.90722 11.96778,-26.875 26.875,-26.875zM118.25,86c17.86768,0 32.25,14.38232 32.25,32.25c0,17.86768 -14.38232,32.25 -32.25,32.25c-17.86768,0 -32.25,-14.38232 -32.25,-32.25c0,-17.86768 14.38232,-32.25 32.25,-32.25zM112.875,96.75v16.125h-16.125v10.75h16.125v16.125h10.75v-16.125h16.125v-10.75h-16.125v-16.125z"></path></g></g></svg>
+ Sign up</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link btn btn-secondary" href="/login"><svg xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
+width="32" height="32"
+viewBox="0 0 172 172"
+style=" fill:#000000;"><g fill="none" fill-rule="nonzero" stroke="none" stroke-width="1" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10" stroke-dasharray="" stroke-dashoffset="0" font-family="none" font-weight="none" font-size="none" text-anchor="none" style="mix-blend-mode: normal"><path d="M0,172v-172h172v172z" fill="none"></path><g fill="#01533b"><path d="M53.75,16.125v53.75h10.75v-43h75.25v118.25h-75.25v-43h-10.75v53.75h96.75v-139.75zM87.84766,60.63672l-7.72656,7.72656l12.26172,12.26172h-65.50781v10.75h65.50781l-12.26172,12.26172l7.72656,7.72656l21.5,-21.5l3.69531,-3.86328l-3.69531,-3.86328z"></path></g></g></svg>
+ Log in</a>
+                        </li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+
     
+    <main>
     {% block main %}{% endblock %}
+    </main>
+
+    <footer>
+        <div class="container-fluid">
+            <div class="row">
+                <div id="left-footer" class="col">
+                    <a href="/" id="footer-logo">
+                        <img src="/static/img/website.png" loading="lazy">
+                    </a>
+                </div>
+                <div id="right-footer" class="col">
+                    <table class="table table-borderless">
+                        <tbody>
+                            <tr>
+                                <td>Site built with <a href="https://getbootstrap.com/">Bootstrap</a> and <a href="https://palletsprojects.com/p/flask/">Flask</a></td>
+                            </tr>
+                            <tr>
+                                <td>Icons by <a href="https://icons8.com/icons">Icons8</a></td>
+                            </tr>
+                            <tr>
+                                <td>Powered by <a href="https://thedogapi.com/">TheDogAPI</a> and <a href="https://thecatapi.com/">TheCatAPI</a></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </footer>
     
     {% block scripts %}{% endblock %}
 

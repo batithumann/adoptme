@@ -4,9 +4,9 @@
 
 {% block main %}
 
-<div class="container">
+<div class="container pets">
     <div class="row">
-
+        {% if pets|length > 0 %}
         <div class="col-3">
             <h5>Filters</h5>
             <form action="" method=get id="filter">
@@ -48,42 +48,29 @@
         </div>
 
         <div class="col-9">
-            <table class="table">
-                <thead>
-                    <tr>
-                        <th scope="col"></th>
-                        <th scope="col">Name</th>
-                        <th scope="col">Age</th>
-                        <th scope="col">Gender</th>
-                        <th scope="col">Animal</th>
-                        <th scope="col">Breed</th>
-                        <th scope="col">Entry Date</th>
-                        <th scope="col">Description</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {% for pet in pets %}
-                    <tr>
-                        <td>
-                            {% if pet[9] %}
-                            <a href="/pets/{{ pet[5]|lower }}s/{{ pet[0] }}">
-                            <img src="/static/uploads/{{ pet[0] }}/{{ pet[9] }}" class="img-thumbnail">
-                            </a>
-                            {% endif %}
-                        </td>
-                        <td><a href="/pets/{{ pet[5]|lower }}s/{{ pet[0] }}">{{ pet[2] }}</a></td>
-                        <td>{{ pet[3] }}</td>
-                        <td>{{ pet[4] }}</td>
-                        <td>{{ pet[5] }}</td>
-                        <td>{{ pet[6] }}</td>
-                        <td>{{ pet[7].strftime('%B %d %Y') }}</td>
-                        <td>{{ pet[8] }}</td>
-                    </tr>
-                    {% endfor %}
-                </tbody>
-            </table>
-        </div>
 
+            <div class="row row-cols-1 row-cols-md-4">
+
+                {% for pet in pets %}
+                <div class="col mb-3">
+                    <a href="/pets/{{pet[5]|lower}}s/{{pet[0]}}">
+                        <div class="card text-center h-100">
+                            <img src="/static/uploads/{{pet[0]}}/{{pet[9]}}" class="card-img-top">
+                            <div class="card-body">
+                                <h5 class="card-title">{{pet[2]}}</h5>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+                {% endfor %}
+
+            </div>
+
+            
+        </div>
+        {% else %}
+        <h4>Sadly there are no pets available for adoption right now. Please check again soon!</h4>
+        {% endif %}
     </div>
     
 </div>

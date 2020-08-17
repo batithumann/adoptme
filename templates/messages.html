@@ -4,18 +4,21 @@
 
 {% block main %}
 
-<div class="container">
+<div class="container account">
+    <h4>Pet name: <a href="">{{messages[0][12]}}</a></h4>
     {% for message in messages %}
     {% if message[1] == user_id %}
-    <div class="media right">
+    <div class="media right talkbubble talkbubble-right">
     {% else %}
-    <div class="media">
+    <div class="media talkbubble talkbubble-left">
     {% endif %}
         <div class="media-body">
             {% if message[1] == user_id %}
-            <h5 class="mt-0">You</h5>
+            <h6 class="mt-0">You</h6>
+            {% elif message[6] == 'Yes' %}
+            <h6 class="mt-0"><a href="/members/{{ message[1] }}">{{ message[9] }}</a></h6>
             {% else %}
-            <h5 class="mt-0"><a href="/members/{{ message[6] }}">{{ message[6] }}</a></h5>
+            <h6 class="mt-0"><a href="/members/{{ message[1] }}">{{ message[7] }} {{ message[8] }}</a></h6>
             {% endif %}
             <p>{{ message[3] }}</p>
             <small>{{ message[4][:19] }}</small>
@@ -23,18 +26,18 @@
     </div>
     {% endfor %}
         
-    {% if messages[0][8] == user %}
-    <form action="/contact/{{ messages[0][10] }}" method="POST">
+    {% if messages[0][10] == user_id %}
+    <form action="/contact/{{ messages[0][11] }}" method="POST">
     {% else %}
-    <form action="/contact/{{ messages[0][8] }}" method="POST">
+    <form action="/contact/{{ messages[0][10] }}" method="POST">
     {% endif %}
         <div class="form-group">
             <label for="message">Enter your reply: (<span id="characters">255</span> character<span id="plural">s</span>)</label>
             <textarea name="message" class="form-control" id="message" rows="3" maxlength="255"></textarea>
         </div>
-        <input name="receiver" type="text" value="{% if user_id == messages[0][7] %}{{ messages[0][8] }}{% else %}{{ messages[0][7] }}{% endif %}" hidden>
+        <input name="receiver" type="text" value="{% if user_id == messages[0][10] %}{{ messages[0][11] }}{% else %}{{ messages[0][10] }}{% endif %}" hidden>
         <input name="sender" type="text" value="{{ user_id }}" hidden>
-        <input name="subject" type="text" value="{{ messages[0][9] }}" hidden>
+        <input name="subject" type="text" value="{{ messages[0][12] }}" hidden>
         <button type="submit" class="btn btn-primary mb-2">Submit</button>
     </form>
 </div>

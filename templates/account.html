@@ -4,19 +4,118 @@
 
 {% block main %}
 
-<div class="container">
-    <ul>
-        <li><a href="/account/edit">Edit your account details</a></li>
-        <li><a href="/add_pet">Put a pet up for adoption</a></li>
-    </ul>
-    {% if rows|length > 0 %}
-    <h4>Your pets</h4>
-    {% endif %}
-    <ol>
-        {% for pet in rows %}
-        <li><a href="/pets/{{ pet[5]|lower }}s/{{ pet[0] }}">{{ pet[2] }}</a> - (<a href="/remove/{{ pet[0] }}">Edit or Remove</a>)</li>
-        {% endfor %}
-    </ol>
+<div class="container account">
+    <div class="row">
+        <div class="col-md-3">
+            <div class="list-group">
+                <a href="/account" class="list-group-item list-group-item-action">
+                    About me
+                </a>
+                <a href="/account/password" class="list-group-item list-group-item-action">Account settings</a>
+                <a href="/account/pets" class="list-group-item list-group-item-action">My pets</a>
+            </div>
+        </div>
+
+        <div class="col-md-9">
+            <h3>About me</h3>
+            <form class="form-signin" action="/account" method="POST">
+                {% if message|length > 0 %}
+                <div class="alert alert-warning" role="alert">
+                    {{ message }}
+                </div>
+                {% endif %}
+                <div class="row">
+                {% if rows[1] == 'No' %}
+                    <div class="col" id="firstnamegroup">
+                        <div class="form-group">
+                            <label for="firstname">First Name</label>
+                            <input name="firstname" type="text" id="firstname" class="form-control" placeholder="First Name" value="{{rows[2]}}" required autofocus>
+                        </div>
+                    </div>
+                    <div class="col" id="lastnamegroup">
+                        <div class="form-group">
+                            <label for="lastname">Last Name</label>
+                            <input name="lastname" type="text" id="lastname" class="form-control" placeholder="Last Name" value="{{rows[3]}}" required>
+                        </div>
+                    </div>
+                {% else %} 
+                    <div class="col" id="shelternamegroup">
+                        <div class="form-group">
+                            <label for="sheltername">Shelter Name</label>
+                            <input name="sheltername" type="text" id="sheltername" class="form-control" placeholder="Shelter Name" value="{{rows[4]}}" required>
+                        </div>
+                    </div>
+                {% endif %}
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="location">Location</label>
+                            <input name="location" type="text" id="location" class="form-control" placeholder="Location" value="{{rows[6]}}" required>
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="phone">Phone number</label>
+                            {% if rows[8] %}
+                            <input name="phone" type="text" id="location" class="form-control" placeholder="Phone number" value="{{rows[8]}}">
+                            {% else %}
+                            <input name="phone" type="text" id="location" class="form-control" placeholder="Phone number">
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="website">Website</label>
+                            {% if rows[9] %}
+                            <input name="website" type="text" id="location" class="form-control" placeholder="Website" value="{{rows[9]}}">
+                            {% else %}
+                            <input name="website" type="text" id="location" class="form-control" placeholder="Website">
+                            {% endif %}
+                        </div>
+                    <div>
+                </div>
+                <div class="row">
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="facebook">Facebook</label>
+                            {% if rows[10] %}
+                            <input name="facebook" type="text" id="location" class="form-control" placeholder="Facebook username" value="{{rows[10]}}">
+                            {% else %}
+                            <input name="facebook" type="text" id="location" class="form-control" placeholder="Facebook username">
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="instagram">Instagram</label>
+                            {% if rows[11] %}
+                            <input name="instagram" type="text" id="location" class="form-control" placeholder="Instagram username" value="{{rows[11]}}">
+                            {% else %}
+                            <input name="instagram" type="text" id="location" class="form-control" placeholder="Instagram username">
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="col">
+                        <div class="form-group">
+                            <label for="twitter">Twitter</label>
+                            {% if rows[12] %}
+                            <input name="twitter" type="text" id="location" class="form-control" placeholder="Twitter username" value="{{rows[12]}}">
+                            {% else %}
+                            <input name="twitter" type="text" id="location" class="form-control" placeholder="Twitter username">
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+                
+                <button class="btn btn-lg btn-primary btn-block" type="submit">Save changes</button>
+            </form>
+        </div>
+    </div>
 </div>
+
+
 
 {% endblock %}
