@@ -290,10 +290,7 @@ def learn():
     user = session.get("user")
     unread_messages = session.get("unread_messages")
 
-    dog = get_dog_details("Belgian Tervuren")
-    print(dog)
-
-    return render_template("learn.html", dog=dog)
+    return render_template("learn.html", user=user, unread_messages=unread_messages)
 
 
 @app.route('/members/<member_id>')

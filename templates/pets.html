@@ -10,7 +10,7 @@
         <div class="col-3">
             <h5>Filters</h5>
             <form action="" method=get id="filter">
-                <strong>Breed</strong>
+                <strong>Breed</strong><br>
                 {% for breed in breeds %}
                 <div class="form-check">
                 {% if breed[0] in filters %}
@@ -21,7 +21,7 @@
                     <label class="form-check-label" for="{{ breed[0]|replace(' ','') }}">{{ breed[0] }}</label>
                 </div>
                 {% endfor %}
-                <strong>Age</strong>
+                <strong>Age</strong><br>
                 {% for age in ages %}
                 <div class="form-check">
                 {% if age[0] in filters %}
@@ -33,7 +33,7 @@
                 </div>
                 {% endfor %}
 
-                <strong>Gender</strong>
+                <strong>Gender</strong><br>
                 {% for gender in genders %}
                 <div class="form-check">
                 {% if gender[0] in filters %}
