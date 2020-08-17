@@ -7,6 +7,7 @@ import json
 import glob
 import http.client
 import shutil
+import random
 from datetime import datetime
 from flask import Flask, flash, jsonify, redirect, render_template, request, session, url_for
 from flask_session import Session
@@ -48,8 +49,24 @@ Session(app)
 def index():
     '''Homepage'''
     user = session.get("user")
+    unread_messages = session.get("unread_messages")
 
-    return render_template('index.html', user=user)
+    db = sqlite3.connect("app.db")
+    c = db.cursor()
+    latest = c.execute('''
+    SELECT * FROM pets p
+    LEFT JOIN (SELECT pet_id, filename FROM photos GROUP BY pet_id) ph
+    ON ph.pet_id = p.id
+    ORDER BY entry_date DESC
+    LIMIT 4
+    ''').fetchall()
+
+    random_cat = get_random_cat()
+    random_dog = get_random_dog()
+
+    db.close()
+
+    return render_template('index.html', user=user, latest=latest, unread_messages=unread_messages, random_cat=random_cat, random_dog=random_dog)
 
 
 
@@ -57,41 +74,51 @@ def index():
 def register():
     """Register user"""
     user = session.get("user")
+    unread_messages = session.get("unread_messages")
 
     if request.method == "GET":
-        return render_template("register.html", user=user)
+        return render_template("register.html", user=user, unread_messages=unread_messages)
     else:
         db = sqlite3.connect("app.db")
         c = db.cursor()
-        username = request.form.get("username")
+        is_shelter = request.form.get("shelter")
+        firstname = request.form.get("firstname")
+        lastname = request.form.get("lastname")
+        sheltername = request.form.get("sheltername")
         email = request.form.get("email")
+        location = request.form.get("location")
         password = request.form.get("password")
         password_confirm = request.form.get("password_confirm")
-        if not username:
-            return render_template("register.html", message="Username not valid", email=email, user=user)
-        existing_users = c.execute("SELECT username FROM users").fetchall()
-        if len(existing_users) != 0:
-            if (username, ) in existing_users:
-                db.close()
-                return render_template("register.html", message="Username already exists", email=email, user=user)
+
+        if not email:
+            db.close()
+            return render_template("register.html", message="Email not valid", email=email, user=user, unread_messages=unread_messages)
         existing_emails = c.execute("SELECT email FROM users").fetchall()
         if len(existing_emails) != 0:
             if (email, ) in existing_emails:
                 db.close()
-                return render_template("register.html", message="Email address already registered", username=username, user=user)
+                return render_template("register.html", message="Email address already registered", user=user, unread_messages=unread_messages)
         if not password:
-            return render_template("register.html", message="Password invalid", username=username, email=email, user=user)
+            db.close()
+            return render_template("register.html", message="Password invalid", email=email, user=user, unread_messages=unread_messages)
         if not password_confirm:
-            return render_template("register.html", message="Passwords did not match", username=username, email=email, user=user)
+            db.close()
+            return render_template("register.html", message="Passwords did not match", email=email, user=user, unread_messages=unread_messages)
         if password != password_confirm:
-            return render_template("register.html", message="Passwords did not match", username=username, email=email, user=user)
-        data = (username, email, generate_password_hash(password))
-        sql = "INSERT INTO users (username, email, hash) VALUES (?, ?, ?)"
+            db.close()
+            return render_template("register.html", message="Passwords did not match", email=email, user=user, unread_messages=unread_messages)
+        
+        if is_shelter == 'No':
+            data = (is_shelter, firstname, lastname, email, location, generate_password_hash(password))
+            sql = "INSERT INTO users (shelter, firstname, lastname, email, location, hash) VALUES (?, ?, ?, ?, ?, ?)"
+        elif is_shelter == 'Yes':
+            data = (is_shelter, sheltername, email, location, generate_password_hash(password))
+            sql = "INSERT INTO users (shelter, sheltername, email, location, hash) VALUES (?, ?, ?, ?, ?)"
         c.execute(sql, data)
         db.commit()
         db.close()
         return redirect("/login")
-    return render_template("index.html", user=user)
+    return render_template("index.html", user=user, unread_messages=unread_messages)
 
 
 
@@ -103,31 +130,39 @@ def login():
 
     # User reached route via POST (as by submitting a form via POST)
     if request.method == 'POST':
-        username = request.form.get('username')
+        email = request.form.get('email')
         password = request.form.get('password')
 
-        # Ensure username was submitted
-        if not username:
-            return render_template('login.html', message='Username not valid')
+        # Ensure email was submitted
+        if not email:
+            return render_template('login.html', message='Email not valid')
 
         # Ensure password was submitted
         elif not password:
             return render_template('login.html', message='Password is required')
 
-        # Query database for username
+        # Query database for email
         db = sqlite3.connect('app.db')
         c = db.cursor()
-        rows = c.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchall()
+        rows = c.execute('SELECT * FROM users WHERE email = ?', (email,)).fetchall()
 
-        # Ensure username exists and password is correct
-        if len(rows) != 1 or not check_password_hash(rows[0][3], password):
-            return render_template('login.html', message='Invalid username and/or password')
+        # Ensure email exists and password is correct
+        if len(rows) != 1 or not check_password_hash(rows[0][7], password):
+            db.close()
+            return render_template('login.html', message='Invalid email and/or password')
 
         # Remember which user has logged in
         session['user_id'] = rows[0][0]
-        session['user'] = rows[0][1]
+        if rows[0][1] == 'Yes':
+            session['user'] = rows[0][4]
+        elif rows[0][1] == 'No':
+            session['user'] = rows[0][2] + ' ' + rows[0][3]
+
+        # Check if user has unread messages
+        session['unread_messages'] = c.execute("SELECT COUNT(thread_id) FROM messages WHERE read IS NULL AND sender <> ?", (rows[0][0],)).fetchall()[0][0]
 
         # Redirect user to home page
+        db.close()
         return redirect('/')
 
     # User reached route via GET (as by clicking a link or via redirect)
@@ -145,53 +180,169 @@ def logout():
 
 
 
-@app.route('/account')
+@app.route('/account', methods=['GET', 'POST'])
 @login_required
 def account():
     '''Manage user's account'''
     user = session.get("user")
     user_id = session.get("user_id")
+    unread_messages = session.get("unread_messages")
+
+    db = sqlite3.connect('app.db')
+    c = db.cursor()
+    rows = c.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchall()
+
+    if request.method == 'GET':
+        db.close()
+        return render_template("account.html", user=user, unread_messages=unread_messages, rows=rows[0])
+    
+    else:
+        firstname = request.form.get("firstname")
+        lastname = request.form.get("lastname")
+        sheltername = request.form.get("sheltername")
+        location = request.form.get("location")
+        phone = request.form.get("phone")
+        website = request.form.get("website")
+        facebook = request.form.get("facebook")
+        instagram = request.form.get("instagram")
+        twitter = request.form.get("twitter")
+
+        if rows[0][1] == 'No':
+            data = (firstname, lastname, location, phone, website, facebook, instagram, twitter, user_id)
+            sql = "UPDATE users SET firstname = ?, lastname = ?, location = ?, phone = ?, website = ?, facebook = ?, instagram = ?, twitter = ? WHERE id = ?"
+        elif rows[0][1] == 'Yes':
+            data = (sheltername, location, phone, website, facebook, instagram, twitter, user_id)
+            sql = "UPDATE users SET sheltername = ?, location = ?, phone = ?, website = ?, facebook = ?, instagram = ?, twitter = ? WHERE id = ?"
+        c.execute(sql, data)
+        db.commit()
+
+        if rows[0][1] == 'Yes':
+            session['user'] = sheltername
+        elif rows[0][1] == 'No':
+            session['user'] = firstname + ' ' + lastname
+        user = session.get("user")
+        rows = c.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchall()
+        db.close()
+        message = "Account details updated successfully"
+        return render_template("account.html", user=user, unread_messages=unread_messages, rows=rows[0], message=message)
+
+
+@app.route('/account/password', methods=['GET', 'POST'])
+@login_required
+def change_password():
+    '''Manage user's account'''
+    user = session.get("user")
+    user_id = session.get("user_id")
+    unread_messages = session.get("unread_messages")
+
+    db = sqlite3.connect('app.db')
+    c = db.cursor()
+    rows = c.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchall()
+    
+    if request.method == 'GET':
+        db.close()
+        return render_template("change_password.html", user=user, unread_messages=unread_messages, rows=rows[0])
+    
+    else:
+        email = request.form.get("email")
+        current_password = request.form.get("current_password")
+        new_password = request.form.get("new_password")
+        password_confirm = request.form.get("password_confirm")
+
+        if not check_password_hash(rows[0][7], current_password):
+            db.close()
+            message = "Current password is incorrect"
+            return render_template("change_password.html", user=user, unread_messages=unread_messages, rows=rows[0], message=message)
+
+        if new_password:
+            data = (email, generate_password_hash(new_password), user_id)
+            sql = "UPDATE users SET email = ?, hash = ? WHERE id = ?"
+        else:
+            data = (email, user_id)
+            sql = "UPDATE users SET email = ? WHERE id = ?"
+        c.execute(sql, data)
+        db.commit()
+        
+        rows = c.execute('SELECT * FROM users WHERE id = ?', (user_id,)).fetchall()
+        db.close()
+        message = "Email and password updated successfully"
+        return render_template("change_password.html", user=user, unread_messages=unread_messages, rows=rows[0], message=message)
+
+
+@app.route('/account/pets')
+@login_required
+def mypets():
+    '''Manage user's account'''
+    user = session.get("user")
+    user_id = session.get("user_id")
+    unread_messages = session.get("unread_messages")
 
     db = sqlite3.connect('app.db')
     c = db.cursor()
     rows = c.execute('SELECT * FROM pets WHERE owner = ?', (user_id,)).fetchall()
     
-    return render_template("account.html", user=user, rows=rows)
+    db.close()
+    return render_template("mypets.html", user=user, unread_messages=unread_messages, rows=rows)
 
 
+@app.route('/about')
+def learn():
+    user = session.get("user")
+    unread_messages = session.get("unread_messages")
+
+    dog = get_dog_details("Belgian Tervuren")
+    print(dog)
+
+    return render_template("learn.html", dog=dog)
 
 
-@app.route('/members/<username>')
-def members(username):
+@app.route('/members/<member_id>')
+def members(member_id):
     ''' Member profile page '''
     user = session.get("user")
+    user_id = session.get("user_id")
+    unread_messages = session.get("unread_messages")
 
-    # Query database for username
+    # Query database for member_id
     db = sqlite3.connect('app.db')
     c = db.cursor()
-    rows = c.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchall()
+    rows = c.execute('SELECT * FROM users WHERE id = ?', (member_id,)).fetchall()
     if len(rows) > 0:
-        return render_template("members.html", user=user, member=username)
+        member = rows[0]
+        pets = c.execute('''
+        SELECT p.id, p.owner, p.name, p.age, p.gender, p.animal, p.breed, p.entry_date as "[timestamp]", p.description, ph.filename FROM pets p
+        LEFT JOIN (SELECT pet_id, filename FROM photos GROUP BY pet_id) ph
+        ON ph.pet_id = p.id WHERE p.owner = ?
+        ''', (member_id, )).fetchall()
+        return render_template("members.html", user=user, user_id=user_id, unread_messages=unread_messages, member=member, pets=pets)
     else:
+        db.close()
         return redirect("/")
 
 
 
-@app.route('/contact/<username>', methods=["GET", "POST"])
+@app.route('/contact/<member_id>', methods=["GET", "POST"])
 @login_required
-def contact(username):
+def contact(member_id):
     ''' Send message to user '''
     user = session.get("user")
     user_id = session.get("user_id")
+    unread_messages = session.get("unread_messages")
 
     if request.method == "GET":
-        # Query database for username
+        # Query database for member_id
         db = sqlite3.connect('app.db')
         c = db.cursor()
-        rows = c.execute('SELECT * FROM users WHERE username = ?', (username,)).fetchall()
+        rows = c.execute('SELECT * FROM users WHERE id = ?', (member_id,)).fetchall()
         if len(rows) > 0:
-            return render_template("contact.html", user=user, user_id=user_id, member=username, member_id=rows[0][0])
+            if rows[0][1] == 'Yes':
+                member = rows[0][4]
+            elif rows[0][1] == 'No':
+                member = rows[0][2] + ' ' + rows[0][3]
+                db.close()
+            return render_template("contact.html", user=user, unread_messages=unread_messages, user_id=user_id, member=member, member_id=rows[0][0])
         else:
+            db.close()
             return redirect("/")
 
     else:
@@ -229,12 +380,17 @@ def message_threads():
     ''' View user's messages '''
     user = session.get("user")
     user_id = session.get("user_id")
+    unread_messages = session.get("unread_messages")
 
     # Query database for threads
     db = sqlite3.connect('app.db')
     c = db.cursor()
     threads = c.execute('''
-        SELECT t.*, u.username as counterpart_username FROM (
+        SELECT t.*, CASE u.shelter
+		WHEN 'No' then u.firstname || ' ' || u.lastname
+		WHEN 'Yes' then u.sheltername
+		END as counterpart_name
+		FROM (
         SELECT id, user2 as counterpart, latest, subject from threads where user1 = ?
         union all
         SELECT id, user1 as counterpart, latest, subject from threads where user2 = ?
@@ -243,7 +399,13 @@ def message_threads():
         ORDER BY latest DESC
     ''', (user_id, user_id)).fetchall()
 
-    return render_template("threads.html", user=user, threads=threads)
+    unread_threads = []
+    rows = c.execute("SELECT DISTINCT thread_id FROM messages WHERE read IS NULL AND sender <> ?", (user_id, )).fetchall()
+    for row in rows:
+        unread_threads.append(row[0])
+
+    db.close()
+    return render_template("threads.html", user=user, unread_messages=unread_messages, threads=threads, unread_threads=unread_threads)
 
 
 
@@ -253,6 +415,7 @@ def messages(thread_id):
     ''' View user's messages '''
     user = session.get("user")
     user_id = session.get("user_id")
+    unread_messages = session.get("unread_messages")
 
     # Check if user is in thread
     db = sqlite3.connect('app.db')
@@ -261,11 +424,12 @@ def messages(thread_id):
         SELECT * FROM threads WHERE (id = ? AND user1 = ?) OR (id = ? AND user2 = ?)
     ''', (thread_id, user_id, thread_id, user_id)).fetchall()
     if len(rows) == 0:
+        db.close()
         return redirect("/")
 
     # Query database for messages
     messages = c.execute('''
-        SELECT m.*, u.username AS from_user, t.user1, t.user2, t.subject FROM messages m 
+        SELECT m.*, u.shelter, u.firstname, u.lastname, u.sheltername, t.user1, t.user2, t.subject FROM messages m 
         LEFT JOIN users u ON u.id = m.sender
 		LEFT JOIN threads t on m.thread_id = t.id
         LEFT JOIN users u1 on t.user1 = u1.id
@@ -273,13 +437,24 @@ def messages(thread_id):
         WHERE thread_id = ?
     ''', (thread_id)).fetchall()
 
-    return render_template("messages.html", user=user, user_id=user_id, messages=messages)
+    # Set read status
+    c.execute("UPDATE messages SET read = 1 WHERE thread_id = ? AND sender <> ?", (thread_id, user_id))
+
+    # Check for more unread messages
+    session['unread_messages'] = c.execute("SELECT COUNT(thread_id) FROM messages WHERE read IS NULL AND sender <> ?", (user_id,)).fetchall()[0][0]
+    unread_messages = session.get("unread_messages")
+
+    db.commit()
+    db.close()
+
+    return render_template("messages.html", user=user, unread_messages=unread_messages, user_id=user_id, messages=messages)
 
 
 
 @app.route("/pets")
 def pets0():
     user = session.get("user")
+    unread_messages = session.get("unread_messages")
 
     db = sqlite3.connect('app.db', detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
     c = db.cursor()
@@ -344,12 +519,14 @@ def pets0():
 
     current = datetime.now()
 
-    return render_template("pets.html", user=user, pets=pets, breeds=breeds, ages=ages, genders=genders, current=current, filters=filters)
+    db.close()
+    return render_template("pets.html", user=user, unread_messages=unread_messages, pets=pets, breeds=breeds, ages=ages, genders=genders, current=current, filters=filters)
 
 
 @app.route("/pets/<animal>")
 def pets(animal):
     user = session.get("user")
+    unread_messages = session.get("unread_messages")
 
     if animal not in ['cats', 'dogs']:
         return redirect("/pets")
@@ -420,7 +597,8 @@ def pets(animal):
 
     current = datetime.now()
 
-    return render_template("pets.html", user=user, pets=pets, breeds=breeds, ages=ages, genders=genders, current=current, filters=filters)
+    db.close()
+    return render_template("pets.html", user=user, unread_messages=unread_messages, pets=pets, breeds=breeds, ages=ages, genders=genders, current=current, filters=filters)
 
 
 
@@ -428,16 +606,29 @@ def pets(animal):
 def pets_detail(animal, pet_id):
     user = session.get("user")
     user_id = session.get("user_id")
+    unread_messages = session.get("unread_messages")
 
     db = sqlite3.connect('app.db', detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
     c = db.cursor()
     details = c.execute('SELECT id, owner, name, age, gender, animal, breed, entry_date as "[timestamp]", description FROM pets WHERE id = ?', (pet_id, )).fetchall()[0]
     if len(details) < 1:
+        db.close()
         return redirect("/pets")
     owner = c.execute('SELECT * FROM users WHERE id = (SELECT owner FROM pets WHERE id = ?)', (pet_id, )).fetchall()[0]
     photos = c.execute('SELECT * FROM photos WHERE pet_id = ?',(pet_id, )).fetchall()
 
-    return render_template("pet_detail.html", user=user, user_id=user_id, details=details, owner=owner, photos=photos)
+    animal = details[5]
+    breed = details[6]
+
+    if animal == 'Dog':
+        breed_details = get_dog_details(breed)
+    elif animal == 'Cat':
+        breed_details = get_cat_details(breed)
+    else:
+        breed_details = None
+
+    db.close()
+    return render_template("pet_detail.html", user=user, unread_messages=unread_messages, user_id=user_id, details=details, owner=owner, photos=photos, breed_details=breed_details)
 
 
 
@@ -446,11 +637,12 @@ def pets_detail(animal, pet_id):
 def add_pet():
     user = session.get("user")
     user_id = session.get("user_id")
+    unread_messages = session.get("unread_messages")
 
     if request.method == "GET":
         cats = get_cat_breeds()
         dogs = get_dog_breeds()
-        return render_template("add_pet.html", user=user, user_id = user_id, dogs=dogs, cats=cats)
+        return render_template("add_pet.html", user=user, unread_messages=unread_messages, user_id = user_id, dogs=dogs, cats=cats)
     else: 
         owner = request.form.get("owner")
         name = request.form.get("name")
@@ -483,11 +675,7 @@ def add_pet():
                 file = request.files[photo]
                 if file.filename != '':
                     if file and allowed_file(file.filename):
-                        filename = secure_filename(file.filename)
-                        i = 1
-                        while path + "/" + filename in images:
-                            filename = secure_filename(file.filename).rsplit('.', 1)[0] + str(i) + secure_filename(file.filename).rsplit('.', 1)[1]
-                            i += 1
+                        filename = pet_id + photo + '.' + secure_filename(file.filename).rsplit('.', 1)[1]
                         file.save(os.path.join(basedir, path + "/", filename))
                         c.execute("INSERT INTO photos (pet_id, filename) VALUES (?, ?)", (pet_id, filename))
                         db.commit()
@@ -500,11 +688,87 @@ def add_pet():
 
 
 
+@app.route("/pets/<animal>/<pet_id>/edit", methods=["GET", "POST"])
+@login_required
+def edit_pet(animal, pet_id):
+    user = session.get("user")
+    user_id = session.get("user_id")
+    unread_messages = session.get("unread_messages")
+
+    db = sqlite3.connect('app.db', detect_types=sqlite3.PARSE_DECLTYPES|sqlite3.PARSE_COLNAMES)
+    c = db.cursor()
+    details = c.execute('SELECT id, owner, name, age, gender, animal, breed, entry_date as "[timestamp]", description FROM pets WHERE id = ?', (pet_id, )).fetchall()[0]
+    
+    if len(details) < 1:
+        db.close()
+        return redirect("/pets")
+    if details[1] != user_id:
+        db.close()
+        return redirect("/")
+
+    if request.method == "GET":
+        cats = get_cat_breeds()
+        dogs = get_dog_breeds()
+        photos = c.execute('SELECT * FROM photos WHERE pet_id = ?', (pet_id, )).fetchall()
+        db.close()
+        return render_template("edit_pet.html", user=user, user_id=user_id, unread_messages=unread_messages, details=details, photos=photos, dogs=dogs, cats=cats)
+    
+    else:
+        name = request.form.get("name")
+        animal = request.form.get("animal")
+        age = request.form.get("age")
+        gender = request.form.get("gender")
+        breed = request.form.get("breed")
+        description = request.form.get("description")
+
+        data = (name, age, gender, animal, breed, description, pet_id)
+        sql = "UPDATE pets SET name = ?, age = ?, gender = ?, animal = ?, breed = ?, description = ? WHERE id = ?"
+        c.execute(sql, data)
+        db.commit()
+
+        path = "static/uploads/" + pet_id
+        
+        if not os.path.exists(path):
+            os.mkdir(path)
+            print("path does not exist")
+        else:
+            print("path exists")
+
+        images = []
+        for file in glob.glob(path + "/*"):
+            images.append(file)
+
+        for photo in ['photo1', 'photo2', 'photo3', 'photo4']:
+            if photo in request.files:
+                file = request.files[photo]
+                if file.filename != '':
+                    if file and allowed_file(file.filename):
+                        filename = pet_id + photo + '.' + secure_filename(file.filename).rsplit('.', 1)[1]
+                        file.save(os.path.join(basedir, path + "/", filename))
+                        exists = c.execute("SELECT filename FROM photos WHERE filename = ?", (filename, )).fetchall()
+                        if len(exists) == 0:
+                            c.execute("INSERT INTO photos (pet_id, filename) VALUES (?, ?)", (pet_id, filename))
+                            db.commit()
+
+        for delete_photo in ['delete1', 'delete2', 'delete3', 'delete4']:
+            if request.form.get(delete_photo) != "0":
+                filename = request.form.get(delete_photo)
+                os.remove(os.path.join(basedir, path + "/", filename))
+                c.execute("DELETE FROM photos WHERE filename = ?", (filename, ))
+                db.commit()
+
+        db.commit()
+        db.close()
+        return redirect("/pets/" + animal.lower() + "s/" + pet_id)
+
+
+
 @app.route("/remove/<pet_id>", methods=["GET", "POST"])
 @login_required
 def remove(pet_id):
     user = session.get("user")
     user_id = session.get("user_id")
+    unread_messages = session.get("unread_messages")
 
     db = sqlite3.connect("app.db")
     c = db.cursor()
@@ -518,7 +782,7 @@ def remove(pet_id):
         return redirect("/")
 
     if request.method == "GET":
-        return render_template("confirmation.html", user=user, user_id=user_id, pet=pet)
+        return render_template("confirmation.html", user=user, unread_messages=unread_messages, user_id=user_id, pet=pet)
     else:
         c.execute("DELETE FROM pets WHERE id = ?", (pet_id, ))
         c.execute("DELETE FROM photos WHERE pet_id = ?", (pet_id, ))
@@ -532,24 +796,15 @@ def remove(pet_id):
 @app.route("/catapi", methods=["GET", "POST"])
 def catapi():
     
-    conn = http.client.HTTPSConnection("api.thecatapi.com")
+    random_cat = get_random_cat()
 
-    headers = { 'x-api-key': "7737b5f1-f53b-4225-b781-d0b80604ebab" }
-
-    conn.request("GET", "/v1/breeds?attach_breed=0", headers=headers)
-
-    res = conn.getresponse()
-    data = res.read()
-    j = json.loads(data.decode("utf-8"))
-
-    return render_template("cats.html", cats=j)
+    return render_template("cats.html", random_cat=random_cat)
 
 
 
 @app.route("/dogapi", methods=["GET", "POST"])
 def dogapi():
     
-
     conn = http.client.HTTPSConnection("api.thedogapi.com")
 
     headers = { 'x-api-key': "3a2b00e5-a4b0-4618-8181-43a3192048fd" }
@@ -558,9 +813,16 @@ def dogapi():
 
     res = conn.getresponse()
     data = res.read()
-    j = json.loads(data.decode("utf-8"))
+    breeds = json.loads(data.decode("utf-8"))
 
-    return render_template("cats.html", cats=j)
+    random_dog = breeds[random.randint(0, len(breeds) - 1)]
+    
+    conn.request("GET", "/v1/images/search?breed_id=" + str(random_dog["id"]), headers=headers)
+    res = conn.getresponse()
+    data = res.read()
+    random_dog = json.loads(data.decode("utf-8"))[0]
+
+    return render_template("cats.html", random_cat=random_dog, breeds=breeds)
 
 
 
@@ -614,16 +876,106 @@ def get_cat_breeds():
     cats = []
     f = open("static/txt/cats.txt", "r")
     for line in f:
-        cats.append(line)
+        cats.append(line.replace("\n",""))
     return cats
+
+def get_cat_ids():
+    cats = []
+    f = open("static/txt/cats_id.txt", "r")
+    for line in f:
+        cats.append(line.replace("\n",""))
+    return cats
+
+def get_random_cat():
+
+    ids = get_cat_ids()
+    random_id = ids[random.randint(0, len(ids) - 1)].replace("\n","")
+    
+    conn = http.client.HTTPSConnection("api.thecatapi.com")
+
+    headers = { 'x-api-key': "7737b5f1-f53b-4225-b781-d0b80604ebab" }
+   
+    conn.request("GET", "/v1/images/search?breed_id=" + str(random_id), headers=headers)
+    res = conn.getresponse()
+    data = res.read()
+    random_cat = json.loads(data.decode("utf-8"))[0]
+
+    return random_cat
+
+
+def get_cat_details(breed):
+
+    ids = get_cat_ids()
+    breeds = get_cat_breeds()
+
+    try:
+        cat_id = ids[breeds.index(breed)]
+    except:
+        return {}
+
+    conn = http.client.HTTPSConnection("api.thecatapi.com")
+
+    headers = { 'x-api-key': "7737b5f1-f53b-4225-b781-d0b80604ebab" }
+
+    conn.request("GET", "/v1/images/search?breed_id=" + str(cat_id), headers=headers)
+    res = conn.getresponse()
+    data = res.read()
+    cat_details = json.loads(data.decode("utf-8"))[0]
+
+    return cat_details
+
 
 def get_dog_breeds():
     dogs = []
     f = open("static/txt/dogs.txt", "r")
     for line in f:
-        dogs.append(line)
+        dogs.append(line.replace("\n",""))
     return dogs
 
+def get_dog_ids():
+    dogs = []
+    f = open("static/txt/dogs_id.txt", "r")
+    for line in f:
+        dogs.append(line.replace("\n",""))
+    return dogs
+
+def get_random_dog():
+
+    ids = get_dog_ids()
+    random_id = ids[random.randint(0, len(ids) - 1)].replace("\n","")
+    
+    conn = http.client.HTTPSConnection("api.thedogapi.com")
+
+    headers = { 'x-api-key': "3a2b00e5-a4b0-4618-8181-43a3192048fd" }
+
+    conn.request("GET", "/v1/images/search?breed_id=" + str(random_id), headers=headers)
+    res = conn.getresponse()
+    data = res.read()
+    random_dog = json.loads(data.decode("utf-8"))[0]
+
+    return random_dog
+
+
+def get_dog_details(breed):
+
+    ids = get_dog_ids()
+    breeds = get_dog_breeds()
+
+    try:
+        dog_id = ids[breeds.index(breed)]
+    except:
+        return {}
+
+    conn = http.client.HTTPSConnection("api.thedogapi.com")
+
+    headers = { 'x-api-key': "3a2b00e5-a4b0-4618-8181-43a3192048fd" }
+
+    conn.request("GET", "/v1/images/search?breed_id=" + str(dog_id), headers=headers)
+    res = conn.getresponse()
+    data = res.read()
+    dog_details = json.loads(data.decode("utf-8"))[0]
+
+    return dog_details
 
 def add_photo(pet_id, file):
     images = []
