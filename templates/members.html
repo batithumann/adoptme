@@ -1,4 +1,15 @@
-{% extends "layout.html" %} {% block title %} Member details {% endblock %} {% block main %}
+{% extends "layout.html" %}
+
+{% block title %} 
+    {% if member[1] == 'Yes' %}
+        {{ member[4] }} - Adopt Me!
+    {% else %}
+        {{member[2]}} {{member[3]}} - Adopt Me!
+    {% endif %}
+{% endblock %} 
+
+
+{% block main %}
 
 <div class="container account">
 
